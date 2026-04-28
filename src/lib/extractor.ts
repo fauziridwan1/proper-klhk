@@ -154,7 +154,56 @@ export function extractDataFromText(text: string): ExtractedData {
   environment.hasil3RNonB3 = extractParagraph(
     text,
     "hasil absolut 3r limbah non b3",
-    "kesimpulan"
+    "pengelolaan sampah"
+  );
+
+  // New fields: Sampah, Kehati, LCA
+  environment.jumlahSampah = extractAfter([
+    "Jumlah Sampah",
+    "Timbulan Sampah",
+    "Sampah",
+  ]);
+  environment.programPengelolaanSampah = extractParagraph(
+    text,
+    "program pengelolaan sampah",
+    "hasil pengelolaan sampah"
+  );
+  environment.hasilPengelolaanSampah = extractParagraph(
+    text,
+    "hasil pengelolaan sampah",
+    "keanekaragaman hayati"
+  );
+
+  environment.programKehati = extractParagraph(
+    text,
+    "program keanekaragaman hayati",
+    "hasil kehati"
+  );
+  environment.luasKonservasi = extractAfter([
+    "Luas Konservasi",
+    "Area Konservasi",
+    "Luas Kehati",
+  ]);
+  environment.hasilKehati = extractParagraph(
+    text,
+    "hasil perlindungan kehati",
+    "pemberdayaan masyarakat"
+  );
+
+  environment.lingkupLCA = extractParagraph(
+    text,
+    "lingkup lca",
+    "metodologi lca"
+  );
+  environment.metodologiLCA = extractParagraph(
+    text,
+    "metodologi lca",
+    "hasil lca"
+  );
+  environment.hasilLCA = extractParagraph(
+    text,
+    "hasil lca",
+    "sistem manajemen lingkungan"
   );
 
   return { company, environment };

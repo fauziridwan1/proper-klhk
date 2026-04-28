@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { CompanyData, EnvironmentData, SROIData } from "@/lib/types";
-import { ChevronRight, ChevronLeft, Building2, Leaf, Users, FileText, CheckCircle, Upload } from "lucide-react";
+import { ChevronRight, ChevronLeft, Building2, Leaf, Users, FileText, CheckCircle, Upload, Sprout } from "lucide-react";
 import DocumentUploader from "./DocumentUploader";
 
 interface WizardFormProps {
@@ -13,7 +13,6 @@ interface WizardFormProps {
 export default function WizardForm({ onGenerateDRKPL, onGenerateSROI }: WizardFormProps) {
   const [step, setStep] = useState(0);
   const [docType, setDocType] = useState<"drkpl" | "sroi" | null>(null);
-  const [showUploader, setShowUploader] = useState(false);
 
   const [company, setCompany] = useState<CompanyData>({
     namaPerusahaan: "",
@@ -48,6 +47,15 @@ export default function WizardForm({ onGenerateDRKPL, onGenerateSROI }: WizardFo
     limbahNonB3: "",
     program3RNonB3: "",
     hasil3RNonB3: "",
+    jumlahSampah: "",
+    programPengelolaanSampah: "",
+    hasilPengelolaanSampah: "",
+    programKehati: "",
+    luasKonservasi: "",
+    hasilKehati: "",
+    lingkupLCA: "",
+    metodologiLCA: "",
+    hasilLCA: "",
   });
 
   const [sroi, setSroi] = useState<SROIData>({
@@ -66,8 +74,10 @@ export default function WizardForm({ onGenerateDRKPL, onGenerateSROI }: WizardFo
   });
 
   const stepsDRKPL = [
-    { title: "Upload / Profil", icon: Upload },
-    { title: "Data Lingkungan", icon: Leaf },
+    { title: "Profil Perusahaan", icon: Building2 },
+    { title: "Daur Hidup & SML", icon: Sprout },
+    { title: "Efisiensi & Emisi", icon: Leaf },
+    { title: "Limbah & Kehati", icon: Leaf },
     { title: "Review & Generate", icon: FileText },
   ];
 
@@ -93,7 +103,6 @@ export default function WizardForm({ onGenerateDRKPL, onGenerateSROI }: WizardFo
   const handleDataExtracted = (extractedCompany: Partial<CompanyData>, extractedEnv: Partial<EnvironmentData>) => {
     setCompany((prev) => ({ ...prev, ...extractedCompany }));
     setEnv((prev) => ({ ...prev, ...extractedEnv }));
-    setShowUploader(false);
   };
 
   if (!docType) {
@@ -127,33 +136,33 @@ export default function WizardForm({ onGenerateDRKPL, onGenerateSROI }: WizardFo
   return (
     <div className="max-w-4xl mx-auto">
       {/* Stepper */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-8 overflow-x-auto">
         {currentSteps.map((s, i) => (
-          <div key={i} className="flex items-center">
+          <div key={i} className="flex items-center flex-shrink-0">
             <div className={`flex flex-col items-center ${i <= step ? "text-green-600" : "text-gray-400"}`}>
               <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${
                 i <= step ? "bg-green-600 text-white" : "bg-gray-200"
               }`}>
                 <s.icon className="w-5 h-5" />
               </div>
-              <span className="text-xs font-medium">{s.title}</span>
+              <span className="text-xs font-medium whitespace-nowrap">{s.title}</span>
             </div>
             {i < currentSteps.length - 1 && (
-              <div className={`w-16 h-1 mx-2 ${i < step ? "bg-green-600" : "bg-gray-200"}`} />
+              <div className={`w-8 md:w-16 h-1 mx-1 md:mx-2 ${i < step ? "bg-green-600" : "bg-gray-200"}`} />
             )}
           </div>
         ))}
       </div>
 
       {/* Form Content */}
-      <div className="bg-white rounded-2xl shadow-lg p-8">
+      <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8">
         {docType === "drkpl" && (
           <>
+            {/* Step 0: Profil Perusahaan */}
             {step === 0 && (
               <div className="space-y-6">
                 <h3 className="text-xl font-bold text-green-800 mb-4">Profil Perusahaan</h3>
                 
-                {/* Document Uploader */}
                 <DocumentUploader onDataExtracted={handleDataExtracted} />
                 
                 <div className="border-t pt-6">
@@ -161,81 +170,117 @@ export default function WizardForm({ onGenerateDRKPL, onGenerateSROI }: WizardFo
                     Atau isi manual jika tidak ada dokumen:
                   </p>
                   <div className="grid md:grid-cols-2 gap-4">
-                    <Input label="Nama Perusahaan" value={company.namaPerusahaan} onChange={(v) => setCompany({ ...company, namaPerusahaan: v })} />
-                    <Input label="Bidang Usaha" value={company.bidangUsaha} onChange={(v) => setCompany({ ...company, bidangUsaha: v })} />
-                    <Input label="Nama Penanggung Jawab" value={company.namaPenanggungJawab} onChange={(v) => setCompany({ ...company, namaPenanggungJawab: v })} />
-                    <Input label="Jabatan" value={company.jabatan} onChange={(v) => setCompany({ ...company, jabatan: v })} />
+                    <Input label="Nama Perusahaan *" value={company.namaPerusahaan} onChange={(v) => setCompany({ ...company, namaPerusahaan: v })} />
+                    <Input label="Bidang Usaha *" value={company.bidangUsaha} onChange={(v) => setCompany({ ...company, bidangUsaha: v })} />
+                    <Input label="Nama Penanggung Jawab *" value={company.namaPenanggungJawab} onChange={(v) => setCompany({ ...company, namaPenanggungJawab: v })} />
+                    <Input label="Jabatan *" value={company.jabatan} onChange={(v) => setCompany({ ...company, jabatan: v })} />
                     <Input label="Tahun Penilaian" value={company.tahunPenilaian} onChange={(v) => setCompany({ ...company, tahunPenilaian: v })} />
                     <Input label="Nomor Izin Lingkungan" value={company.nomorIzin} onChange={(v) => setCompany({ ...company, nomorIzin: v })} />
                     <Input label="Kapasitas Produksi" value={company.kapasitasProduksi} onChange={(v) => setCompany({ ...company, kapasitasProduksi: v })} />
                     <Input label="Jumlah Karyawan" value={company.jumlahKaryawan} onChange={(v) => setCompany({ ...company, jumlahKaryawan: v })} />
                     <Input label="Luas Lahan" value={company.luasLahan} onChange={(v) => setCompany({ ...company, luasLahan: v })} />
-                    <Input label="Lokasi" value={company.lokasi} onChange={(v) => setCompany({ ...company, lokasi: v })} />
+                    <Input label="Lokasi (Kota/Kab)" value={company.lokasi} onChange={(v) => setCompany({ ...company, lokasi: v })} />
                   </div>
                   <TextArea label="Alamat Lengkap" value={company.alamat} onChange={(v) => setCompany({ ...company, alamat: v })} />
                 </div>
               </div>
             )}
 
+            {/* Step 1: Daur Hidup & SML */}
             {step === 1 && (
               <div className="space-y-6">
-                <h3 className="text-xl font-bold text-green-800 mb-4">Data Lingkungan</h3>
+                <h3 className="text-xl font-bold text-green-800 mb-4">Penilaian Daur Hidup (LCA)</h3>
                 
-                <div className="border rounded-xl p-4">
-                  <h4 className="font-semibold text-green-700 mb-2">Efisiensi Energi</h4>
+                <div className="border rounded-xl p-4 bg-green-50/50">
+                  <h4 className="font-semibold text-green-700 mb-2">Life Cycle Assessment</h4>
+                  <p className="text-xs text-gray-500 mb-4">Sesuai SNI ISO 14040:2016 dan SNI ISO 14044:2017</p>
+                  <TextArea label="Lingkup LCA" value={env.lingkupLCA} onChange={(v) => setEnv({ ...env, lingkupLCA: v })} placeholder="Cakupan gate-to-gate: input bahan baku, proses produksi, output produk & emisi" />
+                  <TextArea label="Metodologi LCA" value={env.metodologiLCA} onChange={(v) => setEnv({ ...env, metodologiLCA: v })} placeholder="Mis: Metode CML-IA baseline, kategori dampak: GWP, acidification, dll" />
+                  <TextArea label="Hasil LCA" value={env.hasilLCA} onChange={(v) => setEnv({ ...env, hasilLCA: v })} placeholder="Ringkasan hasil penilaian daur hidup dan hotspot lingkungan" />
+                </div>
+              </div>
+            )}
+
+            {/* Step 2: Energi & Emisi & Air */}
+            {step === 2 && (
+              <div className="space-y-6">
+                <h3 className="text-xl font-bold text-green-800 mb-4">Efisiensi Sumber Daya & Emisi</h3>
+                
+                <SectionBox title="Efisiensi Energi" color="amber">
                   <div className="grid md:grid-cols-2 gap-4">
                     <Input label="Pemakaian Energi (GJ/th)" value={env.pemakaianEnergi} onChange={(v) => setEnv({ ...env, pemakaianEnergi: v })} />
                     <Input label="Sumber Energi" value={env.sumberEnergi} onChange={(v) => setEnv({ ...env, sumberEnergi: v })} />
                   </div>
                   <TextArea label="Program Efisiensi Energi" value={env.programEfisiensiEnergi} onChange={(v) => setEnv({ ...env, programEfisiensiEnergi: v })} />
                   <TextArea label="Hasil Efisiensi Energi" value={env.hasilEfisiensiEnergi} onChange={(v) => setEnv({ ...env, hasilEfisiensiEnergi: v })} />
-                </div>
+                </SectionBox>
 
-                <div className="border rounded-xl p-4">
-                  <h4 className="font-semibold text-green-700 mb-2">Penurunan Emisi</h4>
+                <SectionBox title="Penurunan Emisi" color="blue">
                   <div className="grid md:grid-cols-2 gap-4">
                     <Input label="Emisi GRK (ton CO2e)" value={env.emisiGRK} onChange={(v) => setEnv({ ...env, emisiGRK: v })} />
                     <Input label="Emisi Konvensional" value={env.emisiKonvensional} onChange={(v) => setEnv({ ...env, emisiKonvensional: v })} />
                   </div>
                   <TextArea label="Program Pengurangan Emisi" value={env.programPenguranganEmisi} onChange={(v) => setEnv({ ...env, programPenguranganEmisi: v })} />
                   <TextArea label="Hasil Pengurangan Emisi" value={env.hasilPenguranganEmisi} onChange={(v) => setEnv({ ...env, hasilPenguranganEmisi: v })} />
-                </div>
+                </SectionBox>
 
-                <div className="border rounded-xl p-4">
-                  <h4 className="font-semibold text-green-700 mb-2">Efisiensi Air</h4>
+                <SectionBox title="Efisiensi Air & Air Limbah" color="cyan">
                   <div className="grid md:grid-cols-2 gap-4">
                     <Input label="Penggunaan Air (m3/th)" value={env.penggunaanAir} onChange={(v) => setEnv({ ...env, penggunaanAir: v })} />
                     <Input label="Air Limbah (m3/th)" value={env.airLimbah} onChange={(v) => setEnv({ ...env, airLimbah: v })} />
                   </div>
                   <TextArea label="Program Konservasi Air" value={env.programKonservasiAir} onChange={(v) => setEnv({ ...env, programKonservasiAir: v })} />
                   <TextArea label="Hasil Konservasi Air" value={env.hasilKonservasiAir} onChange={(v) => setEnv({ ...env, hasilKonservasiAir: v })} />
-                </div>
-
-                <div className="border rounded-xl p-4">
-                  <h4 className="font-semibold text-green-700 mb-2">Limbah B3</h4>
-                  <Input label="Limbah B3 (ton/th)" value={env.limbahB3} onChange={(v) => setEnv({ ...env, limbahB3: v })} />
-                  <TextArea label="Program 3R Limbah B3" value={env.program3RB3} onChange={(v) => setEnv({ ...env, program3RB3: v })} />
-                  <TextArea label="Hasil 3R Limbah B3" value={env.hasil3RB3} onChange={(v) => setEnv({ ...env, hasil3RB3: v })} />
-                </div>
-
-                <div className="border rounded-xl p-4">
-                  <h4 className="font-semibold text-green-700 mb-2">Limbah Non B3</h4>
-                  <Input label="Limbah Non B3 (ton/th)" value={env.limbahNonB3} onChange={(v) => setEnv({ ...env, limbahNonB3: v })} />
-                  <TextArea label="Program 3R Limbah Non B3" value={env.program3RNonB3} onChange={(v) => setEnv({ ...env, program3RNonB3: v })} />
-                  <TextArea label="Hasil 3R Limbah Non B3" value={env.hasil3RNonB3} onChange={(v) => setEnv({ ...env, hasil3RNonB3: v })} />
-                </div>
+                </SectionBox>
               </div>
             )}
 
-            {step === 2 && (
+            {/* Step 3: Limbah & Kehati */}
+            {step === 3 && (
+              <div className="space-y-6">
+                <h3 className="text-xl font-bold text-green-800 mb-4">Limbah, Sampah & Keanekaragaman Hayati</h3>
+
+                <SectionBox title="Limbah B3" color="red">
+                  <Input label="Limbah B3 (ton/th)" value={env.limbahB3} onChange={(v) => setEnv({ ...env, limbahB3: v })} />
+                  <TextArea label="Program 3R Limbah B3" value={env.program3RB3} onChange={(v) => setEnv({ ...env, program3RB3: v })} />
+                  <TextArea label="Hasil 3R Limbah B3" value={env.hasil3RB3} onChange={(v) => setEnv({ ...env, hasil3RB3: v })} />
+                </SectionBox>
+
+                <SectionBox title="Limbah Non B3" color="orange">
+                  <Input label="Limbah Non B3 (ton/th)" value={env.limbahNonB3} onChange={(v) => setEnv({ ...env, limbahNonB3: v })} />
+                  <TextArea label="Program 3R Limbah Non B3" value={env.program3RNonB3} onChange={(v) => setEnv({ ...env, program3RNonB3: v })} />
+                  <TextArea label="Hasil 3R Limbah Non B3" value={env.hasil3RNonB3} onChange={(v) => setEnv({ ...env, hasil3RNonB3: v })} />
+                </SectionBox>
+
+                <SectionBox title="Pengelolaan Sampah" color="yellow">
+                  <Input label="Jumlah Sampah (ton/th)" value={env.jumlahSampah} onChange={(v) => setEnv({ ...env, jumlahSampah: v })} />
+                  <TextArea label="Program Pengelolaan Sampah" value={env.programPengelolaanSampah} onChange={(v) => setEnv({ ...env, programPengelolaanSampah: v })} />
+                  <TextArea label="Hasil Pengelolaan Sampah" value={env.hasilPengelolaanSampah} onChange={(v) => setEnv({ ...env, hasilPengelolaanSampah: v })} />
+                </SectionBox>
+
+                <SectionBox title="Perlindungan Keanekaragaman Hayati" color="green">
+                  <Input label="Luas Area Konservasi (ha)" value={env.luasKonservasi} onChange={(v) => setEnv({ ...env, luasKonservasi: v })} />
+                  <TextArea label="Program Keanekaragaman Hayati" value={env.programKehati} onChange={(v) => setEnv({ ...env, programKehati: v })} />
+                  <TextArea label="Hasil Perlindungan Kehati" value={env.hasilKehati} onChange={(v) => setEnv({ ...env, hasilKehati: v })} />
+                </SectionBox>
+              </div>
+            )}
+
+            {/* Step 4: Review */}
+            {step === 4 && (
               <div className="text-center">
                 <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-4" />
                 <h3 className="text-xl font-bold text-green-800 mb-2">Siap Generate DRKPL</h3>
-                <p className="text-gray-600 mb-6">Data telah lengkap. Klik tombol di bawah untuk generate dokumen DRKPL sesuai Permen LH/BPH No. 07/2025.</p>
-                <div className="bg-gray-50 rounded-xl p-4 text-left text-sm space-y-2">
+                <p className="text-gray-600 mb-6">
+                  Dokumen akan digenerate sesuai Permen LH/BPH No. 07/2025 dengan format:<br/>
+                  <span className="text-xs text-gray-400">Times New Roman 12pt | Spasi Tunggal | A4 | Max 30 Halaman</span>
+                </p>
+                <div className="bg-gray-50 rounded-xl p-4 text-left text-sm space-y-2 max-w-md mx-auto">
                   <p><strong>Perusahaan:</strong> {company.namaPerusahaan || "-"}</p>
                   <p><strong>Tahun:</strong> {company.tahunPenilaian}</p>
                   <p><strong>Bidang:</strong> {company.bidangUsaha || "-"}</p>
+                  <p><strong>Penanggung Jawab:</strong> {company.namaPenanggungJawab || "-"}</p>
+                  <p className="text-xs text-amber-600 mt-2">⚠️ Pastikan semua data terisi. Surat pernyataan akan otomatis digenerate.</p>
                 </div>
               </div>
             )}
@@ -314,7 +359,26 @@ export default function WizardForm({ onGenerateDRKPL, onGenerateSROI }: WizardFo
   );
 }
 
-function Input({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+function SectionBox({ title, color, children }: { title: string; color: string; children: React.ReactNode }) {
+  const borderColor = {
+    amber: "border-amber-200 bg-amber-50/30",
+    blue: "border-blue-200 bg-blue-50/30",
+    cyan: "border-cyan-200 bg-cyan-50/30",
+    red: "border-red-200 bg-red-50/30",
+    orange: "border-orange-200 bg-orange-50/30",
+    yellow: "border-yellow-200 bg-yellow-50/30",
+    green: "border-green-200 bg-green-50/30",
+  }[color] || "border-gray-200 bg-gray-50/30";
+
+  return (
+    <div className={`border rounded-xl p-4 ${borderColor} space-y-3`}>
+      <h4 className="font-semibold text-gray-800">{title}</h4>
+      {children}
+    </div>
+  );
+}
+
+function Input({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string }) {
   return (
     <div>
       <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
@@ -322,19 +386,21 @@ function Input({ label, value, onChange }: { label: string; value: string; onCha
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
         className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
       />
     </div>
   );
 }
 
-function TextArea({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+function TextArea({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string }) {
   return (
     <div>
       <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
       <textarea
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
         rows={3}
         className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
       />

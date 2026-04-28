@@ -13,24 +13,48 @@ export interface CompanyData {
 }
 
 export interface EnvironmentData {
+  // Efisiensi Energi
   pemakaianEnergi: string;
   sumberEnergi: string;
   programEfisiensiEnergi: string;
   hasilEfisiensiEnergi: string;
+  // Penurunan Emisi
   emisiGRK: string;
   emisiKonvensional: string;
   programPenguranganEmisi: string;
   hasilPenguranganEmisi: string;
+  // Efisiensi Air
   penggunaanAir: string;
   airLimbah: string;
   programKonservasiAir: string;
   hasilKonservasiAir: string;
+  // Limbah B3
   limbahB3: string;
   program3RB3: string;
   hasil3RB3: string;
+  // Limbah Non B3
   limbahNonB3: string;
   program3RNonB3: string;
   hasil3RNonB3: string;
+  // Pengelolaan Sampah
+  jumlahSampah: string;
+  programPengelolaanSampah: string;
+  hasilPengelolaanSampah: string;
+  // Keanekaragaman Hayati
+  programKehati: string;
+  luasKonservasi: string;
+  hasilKehati: string;
+  // Penilaian Daur Hidup (LCA)
+  lingkupLCA: string;
+  metodologiLCA: string;
+  hasilLCA: string;
+}
+
+export interface SuratPernyataan {
+  namaPenandatangan: string;
+  jabatanPenandatangan: string;
+  tanggalTtd: string;
+  tempatTtd: string;
 }
 
 export interface SROIData {

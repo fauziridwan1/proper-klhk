@@ -46,10 +46,17 @@ export default function DocumentPreview({ document: generatedDoc, onClose, color
     // Title
     children.push(
       new Paragraph({
-        text: generatedDoc.title,
+        children: [
+          new TextRun({
+            text: generatedDoc.title,
+            font: "Times New Roman",
+            size: 24, // 12pt
+            bold: true,
+          }),
+        ],
         heading: HeadingLevel.TITLE,
         alignment: AlignmentType.CENTER,
-        spacing: { after: 400 },
+        spacing: { after: 200, line: 240 },
       })
     );
 
@@ -59,10 +66,12 @@ export default function DocumentPreview({ document: generatedDoc, onClose, color
           new TextRun({
             text: "Disusun sesuai Permen LH/BPH No. 07 Tahun 2025",
             italics: true,
+            font: "Times New Roman",
+            size: 24, // 12pt = 24 half-points
           }),
         ],
         alignment: AlignmentType.CENTER,
-        spacing: { after: 600 },
+        spacing: { after: 400, line: 240 }, // single spacing = 240 twips
       })
     );
 
@@ -71,9 +80,16 @@ export default function DocumentPreview({ document: generatedDoc, onClose, color
       // Section heading
       children.push(
         new Paragraph({
-          text: section.heading,
+          children: [
+            new TextRun({
+              text: section.heading,
+              font: "Times New Roman",
+              size: 24, // 12pt
+              bold: true,
+            }),
+          ],
           heading: HeadingLevel.HEADING_1,
-          spacing: { before: 400, after: 200 },
+          spacing: { before: 300, after: 150, line: 240 },
         })
       );
 
@@ -83,16 +99,29 @@ export default function DocumentPreview({ document: generatedDoc, onClose, color
         if (block.type === "heading") {
           children.push(
             new Paragraph({
-              text: block.text,
+              children: [
+                new TextRun({
+                  text: block.text,
+                  font: "Times New Roman",
+                  size: 24,
+                  bold: true,
+                }),
+              ],
               heading: HeadingLevel.HEADING_2,
-              spacing: { before: 200, after: 100 },
+              spacing: { before: 200, after: 100, line: 240 },
             })
           );
         } else if (block.type === "list") {
           children.push(
             new Paragraph({
-              text: "• " + block.text,
-              spacing: { after: 80 },
+              children: [
+                new TextRun({
+                  text: "• " + block.text,
+                  font: "Times New Roman",
+                  size: 24,
+                }),
+              ],
+              spacing: { after: 60, line: 240 },
               indent: { left: 400 },
             })
           );
@@ -100,7 +129,7 @@ export default function DocumentPreview({ document: generatedDoc, onClose, color
           children.push(
             new Paragraph({
               children: parseInlineFormatting(block.text),
-              spacing: { after: 120 },
+              spacing: { after: 100, line: 240 },
               alignment: AlignmentType.JUSTIFIED,
             })
           );
@@ -111,8 +140,14 @@ export default function DocumentPreview({ document: generatedDoc, onClose, color
     // Footer
     children.push(
       new Paragraph({
-        text: "",
-        spacing: { before: 600 },
+        children: [
+          new TextRun({
+            text: "",
+            font: "Times New Roman",
+            size: 24,
+          }),
+        ],
+        spacing: { before: 400, line: 240 },
       })
     );
     children.push(
@@ -121,10 +156,12 @@ export default function DocumentPreview({ document: generatedDoc, onClose, color
           new TextRun({
             text: "Dokumen ini digenerate otomatis oleh PROPER KLHK AI Generator",
             italics: true,
-            size: 18,
+            font: "Times New Roman",
+            size: 20, // 10pt for footer
           }),
         ],
         alignment: AlignmentType.CENTER,
+        spacing: { line: 240 },
       })
     );
     children.push(
@@ -133,10 +170,12 @@ export default function DocumentPreview({ document: generatedDoc, onClose, color
           new TextRun({
             text: `Generated on ${new Date().toLocaleDateString("id-ID")}`,
             italics: true,
-            size: 18,
+            font: "Times New Roman",
+            size: 20,
           }),
         ],
         alignment: AlignmentType.CENTER,
+        spacing: { line: 240 },
       })
     );
 
@@ -319,12 +358,12 @@ function parseInlineFormatting(text: string): TextRun[] {
     } else if (part === "</strong>" || part === "</b>") {
       isBold = false;
     } else if (part) {
-      result.push(new TextRun({ text: part, bold: isBold }));
+      result.push(new TextRun({ text: part, bold: isBold, font: "Times New Roman", size: 24 }));
     }
   }
 
   if (result.length === 0) {
-    return [new TextRun({ text })];
+    return [new TextRun({ text, font: "Times New Roman", size: 24 })];
   }
 
   return result;

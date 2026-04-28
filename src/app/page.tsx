@@ -36,8 +36,8 @@ export default function Home() {
       <section className="py-16 px-4 bg-white">
         <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
           <div>
-            <div className="text-4xl font-bold text-green-700">30+</div>
-            <div className="text-gray-600 mt-1">Halaman Dokumen</div>
+            <div className="text-4xl font-bold text-green-700">7</div>
+            <div className="text-gray-600 mt-1">Section Dokumen</div>
           </div>
           <div>
             <div className="text-4xl font-bold text-green-700">2</div>
@@ -52,6 +52,9 @@ export default function Home() {
             <div className="text-gray-600 mt-1">Sesuai Regulasi</div>
           </div>
         </div>
+        <div className="max-w-2xl mx-auto mt-8 p-4 bg-gray-50 rounded-xl text-center text-sm text-gray-600">
+          <p><strong>Format Dokumen:</strong> Times New Roman 12pt | Spasi Tunggal | A4 | *.docx | Max 30 Halaman</p>
+        </div>
       </section>
 
       {/* Features */}
@@ -65,7 +68,7 @@ export default function Home() {
             <FeatureCard
               icon={<FileText className="w-8 h-8 text-green-600" />}
               title="Generate DRKPL"
-              desc="Dokumen Ringkasan Kinerja Pengelolaan Lingkungan otomatis sesuai Permen 07/2025."
+              desc="7-section dokumen lengkap: Surat Pernyataan, LCA, SML, Efisiensi Sumber Daya, Limbah, Kehati, & Pemberdayaan Masyarakat."
             />
             <FeatureCard
               icon={<BarChart3 className="w-8 h-8 text-blue-600" />}
