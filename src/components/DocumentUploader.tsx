@@ -7,7 +7,7 @@ import { CompanyData, EnvironmentData } from "@/lib/types";
 import { extractDataFromText } from "@/lib/extractor";
 
 interface DocumentUploaderProps {
-  onDataExtracted: (company: Partial<CompanyData>, env: Partial<EnvironmentData>) => void;
+  onDataExtracted: (company: Partial<CompanyData>, env: Partial<EnvironmentData>, fileName: string) => void;
 }
 
 export default function DocumentUploader({ onDataExtracted }: DocumentUploaderProps) {
@@ -55,7 +55,7 @@ export default function DocumentUploader({ onDataExtracted }: DocumentUploaderPr
       
       setProgress("Selesai!");
       setExtractedFile(file.name);
-      onDataExtracted(extracted.company, extracted.environment);
+      onDataExtracted(extracted.company, extracted.environment, file.name);
     } catch (err) {
       setError("Terjadi kesalahan saat membaca file. Coba file lain.");
     } finally {
