@@ -4,7 +4,7 @@ import { useRef } from "react";
 import { Download, X, FileText } from "lucide-react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
-import { Document, Packer, Paragraph, HeadingLevel, TextRun, AlignmentType } from "docx";
+import { Document, Packer, Paragraph, HeadingLevel, TextRun, AlignmentType, Table, TableRow, TableCell, WidthType, ImageRun } from "docx";
 import { GeneratedDocument } from "@/lib/types";
 
 interface DocumentPreviewProps {
@@ -18,7 +18,7 @@ export default function DocumentPreview({ document: generatedDoc, onClose, color
 
   const handleExportPDF = async () => {
     if (!contentRef.current) return;
-    const canvas = await html2canvas(contentRef.current, { scale: 2 });
+    const canvas = await html2canvas(contentRef.current, { scale: 2, useCORS: true, allowTaint: true });
     const imgData = canvas.toDataURL("image/png");
     const pdf = new jsPDF("p", "mm", "a4");
     const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -41,18 +41,14 @@ export default function DocumentPreview({ document: generatedDoc, onClose, color
   };
 
   const handleExportWord = async () => {
-    const children: Paragraph[] = [];
+    // Use union type for mixed content
+    const docChildren: (Paragraph | Table)[] = [];
 
     // Title
-    children.push(
+    docChildren.push(
       new Paragraph({
         children: [
-          new TextRun({
-            text: generatedDoc.title,
-            font: "Times New Roman",
-            size: 24, // 12pt
-            bold: true,
-          }),
+          new TextRun({ text: generatedDoc.title, font: "Times New Roman", size: 24, bold: true }),
         ],
         heading: HeadingLevel.TITLE,
         alignment: AlignmentType.CENTER,
@@ -60,73 +56,137 @@ export default function DocumentPreview({ document: generatedDoc, onClose, color
       })
     );
 
-    children.push(
+    docChildren.push(
       new Paragraph({
         children: [
-          new TextRun({
-            text: "Disusun sesuai Permen LH/BPH No. 07 Tahun 2025",
-            italics: true,
-            font: "Times New Roman",
-            size: 24, // 12pt = 24 half-points
-          }),
+          new TextRun({ text: "Disusun sesuai Permen LH/BPH No. 07 Tahun 2025", italics: true, font: "Times New Roman", size: 24 }),
         ],
         alignment: AlignmentType.CENTER,
-        spacing: { after: 400, line: 240 }, // single spacing = 240 twips
+        spacing: { after: 400, line: 240 },
       })
     );
 
-    // Sections
+    // Process each section
     for (const section of generatedDoc.sections) {
       // Section heading
-      children.push(
+      docChildren.push(
         new Paragraph({
-          children: [
-            new TextRun({
-              text: section.heading,
-              font: "Times New Roman",
-              size: 24, // 12pt
-              bold: true,
-            }),
-          ],
+          children: [new TextRun({ text: section.heading, font: "Times New Roman", size: 24, bold: true })],
           heading: HeadingLevel.HEADING_1,
           spacing: { before: 300, after: 150, line: 240 },
         })
       );
 
-      // Parse HTML body to paragraphs
-      const textBlocks = parseHtmlToTextBlocks(section.body);
-      for (const block of textBlocks) {
-        if (block.type === "heading") {
-          children.push(
+      // Parse body into blocks (text, images, tables)
+      const blocks = parseHtmlToBlocks(section.body);
+      for (const block of blocks) {
+        if (block.type === "image") {
+          // Add image as paragraph with ImageRun
+          try {
+            if (!block.src) throw new Error("No image source");
+            const base64Data = block.src.split(",")[1] || block.src;
+            const buf = Buffer.from(base64Data, "base64");
+            const imgRun = new ImageRun({
+              data: buf,
+              transformation: { width: block.maxWidth || 400, height: Math.round((block.maxWidth || 400) * 0.6) },
+              type: "png",
+            });
+            docChildren.push(
+              new Paragraph({
+                children: [imgRun],
+                alignment: AlignmentType.CENTER,
+                spacing: { before: 100, after: 100 },
+              })
+            );
+            if (block.caption) {
+              docChildren.push(
+                new Paragraph({
+                  children: [new TextRun({ text: `Gambar: ${block.caption}`, font: "Times New Roman", size: 20, italics: true })],
+                  alignment: AlignmentType.CENTER,
+                  spacing: { after: 200, line: 240 },
+                })
+              );
+            }
+          } catch (e) {
+            // Fallback: show image placeholder text
+            docChildren.push(
+              new Paragraph({
+                children: [new TextRun({ text: `[Gambar: ${block.caption || "terlampir"}]`, font: "Times New Roman", size: 24, italics: true })],
+                alignment: AlignmentType.CENTER,
+                spacing: { after: 100 },
+              })
+            );
+          }
+        } else if (block.type === "table") {
+          if (!block.headers || !block.rows) continue;
+          // Add docx table
+          const tableRows: TableRow[] = [];
+          const colCount = block.headers.length + 1; // +1 for No column
+
+          // Header row
+          const headerCells: TableCell[] = [
+            new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "No", font: "Times New Roman", size: 20, bold: true })], alignment: AlignmentType.CENTER })], width: { size: 500, type: WidthType.DXA } }),
+          ];
+          block.headers.forEach((h) => {
+            headerCells.push(
+              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: h, font: "Times New Roman", size: 20, bold: true })], alignment: AlignmentType.CENTER })], width: { size: Math.floor(8500 / colCount), type: WidthType.DXA } })
+            );
+          });
+          tableRows.push(new TableRow({ children: headerCells, tableHeader: true }));
+
+          // Data rows
+          block.rows.forEach((row, ri) => {
+            const cells: TableCell[] = [
+              new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: String(ri + 1), font: "Times New Roman", size: 20 })], alignment: AlignmentType.CENTER })] }),
+            ];
+            row.forEach((cell) => {
+              cells.push(
+                new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: cell || "-", font: "Times New Roman", size: 20 })], alignment: AlignmentType.LEFT })] })
+              );
+            });
+            tableRows.push(new TableRow({ children: cells }));
+          });
+
+          // Caption before table
+          if (block.caption) {
+            docChildren.push(
+              new Paragraph({
+                children: [new TextRun({ text: `Tabel: ${block.caption}`, font: "Times New Roman", size: 22, bold: true })],
+                spacing: { before: 200, after: 100, line: 240 },
+              })
+            );
+          }
+
+          docChildren.push(
+            new Table({
+              rows: tableRows,
+              width: { size: 100, type: WidthType.PERCENTAGE },
+            })
+          );
+
+          // Spacing after table
+          docChildren.push(new Paragraph({ children: [new TextRun({ text: "", font: "Times New Roman", size: 12 })], spacing: { after: 50 } }));
+        } else if (block.type === "heading") {
+          if (!block.text) continue;
+          docChildren.push(
             new Paragraph({
-              children: [
-                new TextRun({
-                  text: block.text,
-                  font: "Times New Roman",
-                  size: 24,
-                  bold: true,
-                }),
-              ],
+              children: [new TextRun({ text: block.text, font: "Times New Roman", size: 24, bold: true })],
               heading: HeadingLevel.HEADING_2,
               spacing: { before: 200, after: 100, line: 240 },
             })
           );
         } else if (block.type === "list") {
-          children.push(
+          if (!block.text) continue;
+          docChildren.push(
             new Paragraph({
-              children: [
-                new TextRun({
-                  text: "• " + block.text,
-                  font: "Times New Roman",
-                  size: 24,
-                }),
-              ],
+              children: [new TextRun({ text: "• " + block.text, font: "Times New Roman", size: 24 })],
               spacing: { after: 60, line: 240 },
               indent: { left: 400 },
             })
           );
-        } else {
-          children.push(
+        } else if (block.type === "paragraph") {
+          if (!block.text) continue;
+          docChildren.push(
             new Paragraph({
               children: parseInlineFormatting(block.text),
               spacing: { after: 100, line: 240 },
@@ -134,67 +194,37 @@ export default function DocumentPreview({ document: generatedDoc, onClose, color
             })
           );
         }
+        // Skip empty/spacer blocks
       }
     }
 
     // Footer
-    children.push(
+    docChildren.push(
       new Paragraph({
-        children: [
-          new TextRun({
-            text: "",
-            font: "Times New Roman",
-            size: 24,
-          }),
-        ],
+        children: [new TextRun({ text: "", font: "Times New Roman", size: 24 })],
         spacing: { before: 400, line: 240 },
       })
     );
-    children.push(
+    docChildren.push(
       new Paragraph({
-        children: [
-          new TextRun({
-            text: "Dokumen ini digenerate otomatis oleh PROPER KLHK AI Generator",
-            italics: true,
-            font: "Times New Roman",
-            size: 20, // 10pt for footer
-          }),
-        ],
+        children: [new TextRun({ text: "Dokumen ini digenerate otomatis oleh PROPER KLHK AI Generator", italics: true, font: "Times New Roman", size: 20 })],
         alignment: AlignmentType.CENTER,
         spacing: { line: 240 },
       })
     );
-    children.push(
+    docChildren.push(
       new Paragraph({
-        children: [
-          new TextRun({
-            text: `Generated on ${new Date().toLocaleDateString("id-ID")}`,
-            italics: true,
-            font: "Times New Roman",
-            size: 20,
-          }),
-        ],
+        children: [new TextRun({ text: `Generated on ${new Date().toLocaleDateString("id-ID")}`, italics: true, font: "Times New Roman", size: 20 })],
         alignment: AlignmentType.CENTER,
         spacing: { line: 240 },
       })
     );
 
     const doc = new Document({
-      sections: [
-        {
-          properties: {
-            page: {
-              margin: {
-                top: 1440, // 1 inch
-                right: 1440,
-                bottom: 1440,
-                left: 1440,
-              },
-            },
-          },
-          children,
-        },
-      ],
+      sections: [{
+        properties: { page: { margin: { top: 1440, right: 1440, bottom: 1440, left: 1440 } } },
+        children: docChildren,
+      }],
     });
 
     const blob = await Packer.toBlob(doc);
@@ -264,17 +294,11 @@ export default function DocumentPreview({ document: generatedDoc, onClose, color
             <p className="text-sm opacity-75">Dokumen telah digenerate oleh AI</p>
           </div>
           <div className="flex gap-2">
-            <button
-              onClick={handleExportWord}
-              className="flex items-center px-4 py-2 bg-white rounded-lg border font-medium hover:shadow transition-all"
-            >
+            <button onClick={handleExportWord} className="flex items-center px-4 py-2 bg-white rounded-lg border font-medium hover:shadow transition-all">
               <FileText className="w-4 h-4 mr-2 text-blue-600" />
               Export Word
             </button>
-            <button
-              onClick={handleExportPDF}
-              className="flex items-center px-4 py-2 bg-white rounded-lg border font-medium hover:shadow transition-all"
-            >
+            <button onClick={handleExportPDF} className="flex items-center px-4 py-2 bg-white rounded-lg border font-medium hover:shadow transition-all">
               <Download className="w-4 h-4 mr-2 text-red-600" />
               Export PDF
             </button>
@@ -286,11 +310,7 @@ export default function DocumentPreview({ document: generatedDoc, onClose, color
 
         {/* Content */}
         <div className="p-8 bg-gray-50 overflow-y-auto max-h-[70vh]">
-          <div
-            ref={contentRef}
-            className="bg-white p-8 shadow-lg prose-document"
-            style={{ minHeight: "800px" }}
-          >
+          <div ref={contentRef} className="bg-white p-8 shadow-lg prose-document" style={{ minHeight: "800px" }}>
             <div className="text-center mb-8 border-b-2 border-green-800 pb-4">
               <h1 className="text-2xl font-bold text-green-900 uppercase">{generatedDoc.title}</h1>
               <p className="text-sm text-gray-500 mt-2">Disusun sesuai Permen LH/BPH No. 07 Tahun 2025</p>
@@ -313,40 +333,127 @@ export default function DocumentPreview({ document: generatedDoc, onClose, color
   );
 }
 
-// Helper to parse HTML content into structured text blocks
-function parseHtmlToTextBlocks(html: string): Array<{ type: string; text: string }> {
-  const blocks: Array<{ type: string; text: string }> = [];
+// --- HTML Parsing for Word Export (supports images, tables, text) ---
 
-  // Simple HTML tag removal and structure detection
-  const lines = html.split(/\n/);
+interface ParsedBlock {
+  type: "paragraph" | "heading" | "list" | "image" | "table" | "spacer";
+  text?: string;
+  src?: string;       // base64 data URL for images
+  caption?: string;
+  maxWidth?: number;
+  headers?: string[];
+  rows?: string[][];
+}
 
-  for (const line of lines) {
-    const trimmed = line.trim();
+function parseHtmlToBlocks(html: string): ParsedBlock[] {
+  const blocks: ParsedBlock[] = [];
+
+  // Split by block-level elements while keeping the tags
+  const parts = html.split(/(<(?:figure|img|table|h[23]|li|p|div)[^>]*>[\s\S]*?<\/(?:figure|table|h[23]|li|p|div)>|<br\s*\/?>)/i);
+  
+  for (const part of parts) {
+    const trimmed = part.trim();
     if (!trimmed) continue;
+    if (trimmed === "<br/>" || trimmed === "<br>" || trimmed === "<br />") {
+      blocks.push({ type: "spacer" });
+      continue;
+    }
 
-    // Detect headings
-    if (trimmed.match(/<h[23][^>]*>/i)) {
-      const text = trimmed.replace(/<\/?[^>]+>/g, "").trim();
-      if (text) blocks.push({ type: "heading", text });
-    }
-    // Detect list items
-    else if (trimmed.match(/<li[^>]*>/i)) {
-      const text = trimmed.replace(/<\/?[^>]+>/g, "").trim();
-      if (text) blocks.push({ type: "list", text });
-    }
-    // Regular paragraphs
-    else {
-      const text = trimmed.replace(/<\/?[^>]+>/g, "").trim();
-      if (text && text.length > 3) {
-        blocks.push({ type: "paragraph", text });
+    // Extract images from figure/img tags
+    const figureMatch = trimmed.match(/<figure[^>]*>([\s\S]*?)<\/figure>/i);
+    const imgTagMatch = trimmed.match(/<img[^>]+src="([^"]+)"[^>]*\/?>/i);
+    
+    if (figureMatch || imgTagMatch) {
+      const src = imgTagMatch ? imgTagMatch[1] : (trimmed.match(/<img[^>]+src="([^"]+)"/i) || [])[1];
+      const caption = (trimmed.match(/<figcaption[^>]*>([\s\S]*?)<\/figcaption>/i) || [])[1] || "";
+      let maxWidth = 500;
+      const styleMatch = trimmed.match(/max-width:\s*(\d+)px/);
+      if (styleMatch) maxWidth = parseInt(styleMatch[1]);
+      if (src) {
+        blocks.push({ type: "image", src, caption, maxWidth });
+        continue;
       }
+    }
+
+    // Extract tables
+    if (trimmed.includes("<table") && trimmed.includes("</table>")) {
+      const tableBlock = parseHtmlTable(trimmed);
+      if (tableBlock) {
+        blocks.push(tableBlock);
+        continue;
+      }
+    }
+
+    // Headings
+    if (trimmed.match(/<h[23][^>]*>/i)) {
+      const text = stripHtml(trimmed);
+      if (text) blocks.push({ type: "heading", text });
+      continue;
+    }
+
+    // List items
+    if (trimmed.match(/<li[^>]*>/i)) {
+      const text = stripHtml(trimmed);
+      if (text) blocks.push({ type: "list", text });
+      continue;
+    }
+
+    // Regular text / paragraphs
+    const cleanText = stripHtml(trimmed);
+    if (cleanText && cleanText.length > 2) {
+      blocks.push({ type: "paragraph", text: cleanText });
     }
   }
 
   return blocks;
 }
 
-// Parse inline formatting (bold, etc)
+function parseHtmlTable(html: string): ParsedBlock | null {
+  // Extract caption
+  const captionMatch = html.match(/<caption[^>]*>([\s\S]*?)<\/caption>/i);
+  const caption = captionMatch ? stripHtml(captionMatch[1]) : "";
+
+  // Extract headers
+  const headers: string[] = [];
+  const theadMatch = html.match(/<thead[^>]*>([\s\S]*?)<\/thead>/i);
+  if (theadMatch) {
+    const thMatches = theadMatch[1].matchAll(/<th[^>]*>([\s\S]*?)<\/th>/gi);
+    for (const m of thMatches) {
+      const text = stripHtml(m[1]);
+      if (text && text.toLowerCase() !== "no") headers.push(text);
+    }
+  }
+
+  // Extract rows
+  const rows: string[][] = [];
+  const tbodyMatch = html.match(/<tbody[^>]*>([\s\S]*?)<\/tbody>/i);
+  const rowSource = tbodyMatch ? tbodyMatch[1] : html;
+  const trMatches = rowSource.matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/gi);
+  for (const tr of trMatches) {
+    const tdMatches = tr[1].matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi);
+    const row: string[] = [];
+    for (const td of tdMatches) {
+      row.push(stripHtml(td[1]));
+    }
+    if (row.length > 0) rows.push(row);
+  }
+
+  if (headers.length === 0 && rows.length === 0) return null;
+  
+  // Auto-detect headers from first row if no thead
+  if (headers.length === 0 && rows.length > 0) {
+    // First row might be headers (check if it looks like headers)
+    // For simplicity, use the first row as data
+  }
+
+  return { type: "table", headers, rows, caption };
+}
+
+function stripHtml(html: string): string {
+  return html.replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").trim();
+}
+
+// Parse inline formatting (bold)
 function parseInlineFormatting(text: string): TextRun[] {
   const parts = text.split(/(<strong>|<\/strong>|<b>|<\/b>)/);
   const result: TextRun[] = [];

@@ -72,6 +72,39 @@ export interface SROIData {
   dampakLingkungan: string;
 }
 
+// --- Rich Media Types ---
+
+export interface UploadedImage {
+  id: string;
+  name: string;
+  dataUrl: string;     // base64 for preview & inline embedding
+  caption: string;
+  width?: number;
+  height?: number;
+}
+
+export interface DataTable {
+  title: string;
+  headers: string[];
+  rows: string[][];
+  unit?: string;
+}
+
+export interface RichMedia {
+  // Images
+  logoPerusahaan: UploadedImage | null;
+  fotoSite: UploadedImage[];
+  fotoProgram: UploadedImage[];
+
+  // Data Tables
+  energiBulanan: DataTable | null;
+  emisiBulanan: DataTable | null;
+  airBulanan: DataTable | null;
+  limbahB3Data: DataTable | null;
+  limbahNonB3Data: DataTable | null;
+  sampahData: DataTable | null;
+}
+
 export interface GeneratedDocument {
   title: string;
   content: string;
@@ -85,4 +118,6 @@ export interface GeneratedDocument {
     pagePenalty: number;
     category: string;
   };
+  // Rich media for Word export
+  richMedia?: RichMedia;
 }

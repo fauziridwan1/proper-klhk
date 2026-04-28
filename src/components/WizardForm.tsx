@@ -1,16 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { CompanyData, EnvironmentData, SROIData } from "@/lib/types";
-import { ChevronRight, ChevronLeft, Building2, Leaf, Users, FileText, CheckCircle, Upload, Sprout } from "lucide-react";
+import { CompanyData, EnvironmentData, SROIData, RichMedia, UploadedImage, DataTable } from "@/lib/types";
+import { ChevronRight, ChevronLeft, Building2, Leaf, Users, FileText, CheckCircle, Upload, Sprout, Image, Table2 } from "lucide-react";
 import DocumentUploader from "./DocumentUploader";
+import ImageUploader from "./ImageUploader";
+import TableEditor from "./TableEditor";
 
 interface WizardFormProps {
   onGenerateDRKPL: (company: CompanyData, env: EnvironmentData) => void;
   onGenerateSROI: (data: SROIData) => void;
+  richMedia: RichMedia;
+  onRichMediaChange: (rm: RichMedia) => void;
 }
 
-export default function WizardForm({ onGenerateDRKPL, onGenerateSROI }: WizardFormProps) {
+export default function WizardForm({ onGenerateDRKPL, onGenerateSROI, richMedia, onRichMediaChange }: WizardFormProps) {
   const [step, setStep] = useState(0);
   const [docType, setDocType] = useState<"drkpl" | "sroi" | null>(null);
 
@@ -74,10 +78,11 @@ export default function WizardForm({ onGenerateDRKPL, onGenerateSROI }: WizardFo
   });
 
   const stepsDRKPL = [
-    { title: "Profil Perusahaan", icon: Building2 },
+    { title: "Profil & Logo", icon: Building2 },
     { title: "Daur Hidup & SML", icon: Sprout },
-    { title: "Efisiensi & Emisi", icon: Leaf },
+    { title: "Energi & Emisi", icon: Leaf },
     { title: "Limbah & Kehati", icon: Leaf },
+    { title: "Media & Tabel", icon: Image },
     { title: "Review & Generate", icon: FileText },
   ];
 
@@ -103,6 +108,10 @@ export default function WizardForm({ onGenerateDRKPL, onGenerateSROI }: WizardFo
   const handleDataExtracted = (extractedCompany: Partial<CompanyData>, extractedEnv: Partial<EnvironmentData>) => {
     setCompany((prev) => ({ ...prev, ...extractedCompany }));
     setEnv((prev) => ({ ...prev, ...extractedEnv }));
+  };
+
+  const updateRichMedia = (partial: Partial<RichMedia>) => {
+    onRichMediaChange({ ...richMedia, ...partial });
   };
 
   if (!docType) {
@@ -158,16 +167,26 @@ export default function WizardForm({ onGenerateDRKPL, onGenerateSROI }: WizardFo
       <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8">
         {docType === "drkpl" && (
           <>
-            {/* Step 0: Profil Perusahaan */}
+            {/* Step 0: Profil & Logo */}
             {step === 0 && (
               <div className="space-y-6">
-                <h3 className="text-xl font-bold text-green-800 mb-4">Profil Perusahaan</h3>
+                <h3 className="text-xl font-bold text-green-800 mb-4">Profil Perusahaan & Logo</h3>
                 
                 <DocumentUploader onDataExtracted={handleDataExtracted} />
+
+                {/* Logo Upload */}
+                <ImageUploader
+                  label="Logo Perusahaan"
+                  hint="Upload logo untuk kop dokumen (format PNG/JPG)"
+                  images={richMedia.logoPerusahaan ? [richMedia.logoPerusahaan] : []}
+                  onChange={(imgs) => updateRichMedia({ logoPerusahaan: imgs[0] || null })}
+                  single
+                  max={1}
+                />
                 
                 <div className="border-t pt-6">
                   <p className="text-sm text-gray-500 mb-4">
-                    Atau isi manual jika tidak ada dokumen:
+                    Isi manual data perusahaan:
                   </p>
                   <div className="grid md:grid-cols-2 gap-4">
                     <Input label="Nama Perusahaan *" value={company.namaPerusahaan} onChange={(v) => setCompany({ ...company, namaPerusahaan: v })} />
@@ -201,7 +220,7 @@ export default function WizardForm({ onGenerateDRKPL, onGenerateSROI }: WizardFo
               </div>
             )}
 
-            {/* Step 2: Energi & Emisi & Air */}
+            {/* Step 2: Energi, Emisi & Air + Tables */}
             {step === 2 && (
               <div className="space-y-6">
                 <h3 className="text-xl font-bold text-green-800 mb-4">Efisiensi Sumber Daya & Emisi</h3>
@@ -213,6 +232,17 @@ export default function WizardForm({ onGenerateDRKPL, onGenerateSROI }: WizardFo
                   </div>
                   <TextArea label="Program Efisiensi Energi" value={env.programEfisiensiEnergi} onChange={(v) => setEnv({ ...env, programEfisiensiEnergi: v })} />
                   <TextArea label="Hasil Efisiensi Energi" value={env.hasilEfisiensiEnergi} onChange={(v) => setEnv({ ...env, hasilEfisiensiEnergi: v })} />
+                  {/* Tabel Data Energi Bulanan */}
+                  <div className="mt-4">
+                    <TableEditor
+                      label="Data Pemakaian Energi Bulanan"
+                      hint="Opsional: isi data bulanan untuk ditampilkan sebagai tabel"
+                      table={richMedia.energiBulanan}
+                      onChange={(t) => updateRichMedia({ energiBulanan: t })}
+                      defaultHeaders={["Bulan", "Pemakaian (GJ)", "Produksi (ton)"]}
+                      unit="GJ/bulan"
+                    />
+                  </div>
                 </SectionBox>
 
                 <SectionBox title="Penurunan Emisi" color="blue">
@@ -222,6 +252,16 @@ export default function WizardForm({ onGenerateDRKPL, onGenerateSROI }: WizardFo
                   </div>
                   <TextArea label="Program Pengurangan Emisi" value={env.programPenguranganEmisi} onChange={(v) => setEnv({ ...env, programPenguranganEmisi: v })} />
                   <TextArea label="Hasil Pengurangan Emisi" value={env.hasilPenguranganEmisi} onChange={(v) => setEnv({ ...env, hasilPenguranganEmisi: v })} />
+                  <div className="mt-4">
+                    <TableEditor
+                      label="Data Emisi Bulanan"
+                      hint="Opsional: isi data emisi GRK bulanan"
+                      table={richMedia.emisiBulanan}
+                      onChange={(t) => updateRichMedia({ emisiBulanan: t })}
+                      defaultHeaders={["Bulan", "Emisi GRK (ton CO2e)", "Emisi Konvensional"]}
+                      unit="ton CO2e/bulan"
+                    />
+                  </div>
                 </SectionBox>
 
                 <SectionBox title="Efisiensi Air & Air Limbah" color="cyan">
@@ -231,6 +271,16 @@ export default function WizardForm({ onGenerateDRKPL, onGenerateSROI }: WizardFo
                   </div>
                   <TextArea label="Program Konservasi Air" value={env.programKonservasiAir} onChange={(v) => setEnv({ ...env, programKonservasiAir: v })} />
                   <TextArea label="Hasil Konservasi Air" value={env.hasilKonservasiAir} onChange={(v) => setEnv({ ...env, hasilKonservasiAir: v })} />
+                  <div className="mt-4">
+                    <TableEditor
+                      label="Data Penggunaan Air Bulanan"
+                      hint="Opsional: isi data penggunaan air bulanan"
+                      table={richMedia.airBulanan}
+                      onChange={(t) => updateRichMedia({ airBulanan: t })}
+                      defaultHeaders={["Bulan", "Penggunaan Air (m3)", "Air Limbah (m3)"]}
+                      unit="m3/bulan"
+                    />
+                  </div>
                 </SectionBox>
               </div>
             )}
@@ -244,18 +294,45 @@ export default function WizardForm({ onGenerateDRKPL, onGenerateSROI }: WizardFo
                   <Input label="Limbah B3 (ton/th)" value={env.limbahB3} onChange={(v) => setEnv({ ...env, limbahB3: v })} />
                   <TextArea label="Program 3R Limbah B3" value={env.program3RB3} onChange={(v) => setEnv({ ...env, program3RB3: v })} />
                   <TextArea label="Hasil 3R Limbah B3" value={env.hasil3RB3} onChange={(v) => setEnv({ ...env, hasil3RB3: v })} />
+                  <div className="mt-4">
+                    <TableEditor
+                      label="Data Limbah B3 Bulanan"
+                      table={richMedia.limbahB3Data}
+                      onChange={(t) => updateRichMedia({ limbahB3Data: t })}
+                      defaultHeaders={["Bulan", "Timbulan (ton)", "Dimanfaatkan (ton)", "Diolah (ton)"]}
+                      unit="ton/bulan"
+                    />
+                  </div>
                 </SectionBox>
 
                 <SectionBox title="Limbah Non B3" color="orange">
                   <Input label="Limbah Non B3 (ton/th)" value={env.limbahNonB3} onChange={(v) => setEnv({ ...env, limbahNonB3: v })} />
                   <TextArea label="Program 3R Limbah Non B3" value={env.program3RNonB3} onChange={(v) => setEnv({ ...env, program3RNonB3: v })} />
                   <TextArea label="Hasil 3R Limbah Non B3" value={env.hasil3RNonB3} onChange={(v) => setEnv({ ...env, hasil3RNonB3: v })} />
+                  <div className="mt-4">
+                    <TableEditor
+                      label="Data Limbah Non B3 Bulanan"
+                      table={richMedia.limbahNonB3Data}
+                      onChange={(t) => updateRichMedia({ limbahNonB3Data: t })}
+                      defaultHeaders={["Bulan", "Timbulan (ton)", "Didaur Ulang (ton)", "Dimanfaatkan (ton)"]}
+                      unit="ton/bulan"
+                    />
+                  </div>
                 </SectionBox>
 
                 <SectionBox title="Pengelolaan Sampah" color="yellow">
                   <Input label="Jumlah Sampah (ton/th)" value={env.jumlahSampah} onChange={(v) => setEnv({ ...env, jumlahSampah: v })} />
                   <TextArea label="Program Pengelolaan Sampah" value={env.programPengelolaanSampah} onChange={(v) => setEnv({ ...env, programPengelolaanSampah: v })} />
                   <TextArea label="Hasil Pengelolaan Sampah" value={env.hasilPengelolaanSampah} onChange={(v) => setEnv({ ...env, hasilPengelolaanSampah: v })} />
+                  <div className="mt-4">
+                    <TableEditor
+                      label="Data Pengelolaan Sampah Bulanan"
+                      table={richMedia.sampahData}
+                      onChange={(t) => updateRichMedia({ sampahData: t })}
+                      defaultHeaders={["Bulan", "Organik (ton)", "Anorganik (ton)", "Didaur Ulang (%)"]}
+                      unit="ton/bulan"
+                    />
+                  </div>
                 </SectionBox>
 
                 <SectionBox title="Perlindungan Keanekaragaman Hayati" color="green">
@@ -266,20 +343,54 @@ export default function WizardForm({ onGenerateDRKPL, onGenerateSROI }: WizardFo
               </div>
             )}
 
-            {/* Step 4: Review */}
+            {/* Step 4: Media & Foto */}
             {step === 4 && (
+              <div className="space-y-6">
+                <h3 className="text-xl font-bold text-green-800 mb-4">Foto & Media Pendukung</h3>
+                <p className="text-sm text-gray-500 mb-4">Upload foto untuk dimasukkan ke dalam dokumen DRKPL</p>
+
+                <ImageUploader
+                  label="Foto Site / Lokasi"
+                  hint="Foto area operasional, fasilitas pengelolaan lingkungan, dll"
+                  images={richMedia.fotoSite}
+                  onChange={(imgs) => updateRichMedia({ fotoSite: imgs })}
+                  max={10}
+                />
+
+                <ImageUploader
+                  label="Foto Program / Bukti Kegiatan"
+                  hint="Foto kegiatan community development, konservasi, inovasi sosial, dll"
+                  images={richMedia.fotoProgram}
+                  onChange={(imgs) => updateRichMedia({ fotoProgram: imgs })}
+                  max={10}
+                />
+              </div>
+            )}
+
+            {/* Step 5: Review */}
+            {step === 5 && (
               <div className="text-center">
                 <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-4" />
                 <h3 className="text-xl font-bold text-green-800 mb-2">Siap Generate DRKPL</h3>
-                <p className="text-gray-600 mb-6">
-                  Dokumen akan digenerate sesuai Permen LH/BPH No. 07/2025 dengan format:<br/>
-                  <span className="text-xs text-gray-400">Times New Roman 12pt | Spasi Tunggal | A4 | Max 30 Halaman</span>
+                <p className="text-gray-600 mb-2">
+                  Dokumen akan digenerate sesuai Permen LH/BPH No. 07/2025
                 </p>
+                <div className="inline-block bg-gray-50 rounded-xl px-4 py-2 text-xs text-gray-500 mb-4">
+                  Times New Roman 12pt | Spasi Tunggal | A4 | *.docx | Max 30 Halaman
+                </div>
                 <div className="bg-gray-50 rounded-xl p-4 text-left text-sm space-y-2 max-w-md mx-auto">
                   <p><strong>Perusahaan:</strong> {company.namaPerusahaan || "-"}</p>
                   <p><strong>Tahun:</strong> {company.tahunPenilaian}</p>
                   <p><strong>Bidang:</strong> {company.bidangUsaha || "-"}</p>
                   <p><strong>Penanggung Jawab:</strong> {company.namaPenanggungJawab || "-"}</p>
+                  <p><strong>Logo:</strong> {richMedia.logoPerusahaan ? "✅ Ada" : "❌ Tidak ada"}</p>
+                  <p><strong>Foto Site:</strong> {richMedia.fotoSite.length} foto</p>
+                  <p><strong>Foto Program:</strong> {richMedia.fotoProgram.length} foto</p>
+                  <p><strong>Tabel Data:</strong> {
+                    [richMedia.energiBulanan, richMedia.emisiBulanan, richMedia.airBulanan, 
+                     richMedia.limbahB3Data, richMedia.limbahNonB3Data, richMedia.sampahData]
+                    .filter(Boolean).length
+                  } tabel</p>
                   <p className="text-xs text-amber-600 mt-2">⚠️ Pastikan semua data terisi. Surat pernyataan akan otomatis digenerate.</p>
                 </div>
               </div>

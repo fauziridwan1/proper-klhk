@@ -3,15 +3,28 @@
 import { useState } from "react";
 import WizardForm from "@/components/WizardForm";
 import DocumentPreview from "@/components/DocumentPreview";
-import { CompanyData, EnvironmentData, SROIData, GeneratedDocument } from "@/lib/types";
+import { CompanyData, EnvironmentData, SROIData, GeneratedDocument, RichMedia } from "@/lib/types";
 import { generateDRKPLTemplate, generateSROITemplate } from "@/lib/templates";
+
+const emptyRichMedia: RichMedia = {
+  logoPerusahaan: null,
+  fotoSite: [],
+  fotoProgram: [],
+  energiBulanan: null,
+  emisiBulanan: null,
+  airBulanan: null,
+  limbahB3Data: null,
+  limbahNonB3Data: null,
+  sampahData: null,
+};
 
 export default function WizardClient() {
   const [generatedDoc, setGeneratedDoc] = useState<GeneratedDocument | null>(null);
   const [docColor, setDocColor] = useState<"green" | "blue">("green");
+  const [richMedia, setRichMedia] = useState<RichMedia>(emptyRichMedia);
 
   const handleGenerateDRKPL = (company: CompanyData, env: EnvironmentData) => {
-    const doc = generateDRKPLTemplate(company, env);
+    const doc = generateDRKPLTemplate(company, env, richMedia);
     setGeneratedDoc(doc);
     setDocColor("green");
   };
@@ -27,6 +40,8 @@ export default function WizardClient() {
       <WizardForm
         onGenerateDRKPL={handleGenerateDRKPL}
         onGenerateSROI={handleGenerateSROI}
+        richMedia={richMedia}
+        onRichMediaChange={setRichMedia}
       />
 
       {generatedDoc && (
