@@ -37,7 +37,9 @@ function renderEvidenceSection(
   title: string,
   ev: SectionEvidence,
   desc1?: string,
-  desc2?: string
+  desc2?: string,
+  defaultStatusHeaders?: string[],
+  defaultAbsolutHeaders?: string[]
 ): string {
   const parts: string[] = [];
   parts.push(`<h2>${num}. ${title.toUpperCase()}</h2>`);
@@ -45,12 +47,24 @@ function renderEvidenceSection(
   // 1. Status (Tabel)
   parts.push(`<h3>${num}.1 Status</h3>`);
   if (desc1) parts.push(`<p>${desc1}</p>`);
-  parts.push(renderHTMLTable(ev.statusTable, "Data status belum diisi. Silakan upload data pada step Foto & Data."));
+  if (ev.statusTable) {
+    parts.push(renderHTMLTable(ev.statusTable));
+  } else {
+    const h = defaultStatusHeaders || ["Parameter", "2019", "2020", "2021", "Satuan"];
+    parts.push(`<table style="width:100%;border-collapse:collapse;margin:8px 0;font-size:11px;"><thead><tr style="background:#e8f5e9;">${h.map(hd => `<th style="border:1px solid #bbb;padding:4px 6px;">${hd}</th>`).join("")}</tr></thead><tbody><tr>${h.map(() => '<td style="border:1px solid #ddd;padding:3px 6px;color:#999;">-</td>').join("")}</tr></tbody></table>`);
+    parts.push(`<p style="color:#999;font-style:italic;font-size:11px;">Data status belum diisi. Silakan isi tabel pada step Data.</p>`);
+  }
 
   // 2. Hasil / Nilai Absolut (Tabel)
   parts.push(`<h3>${num}.2 Hasil Absolut</h3>`);
   if (desc2) parts.push(`<p>${desc2}</p>`);
-  parts.push(renderHTMLTable(ev.absolutTable, "Data absolut belum diisi. Silakan upload data pada step Foto & Data."));
+  if (ev.absolutTable) {
+    parts.push(renderHTMLTable(ev.absolutTable));
+  } else {
+    const h = defaultAbsolutHeaders || ["Program", "Hasil 2019", "Hasil 2020", "Hasil 2021", "Anggaran (Rp Juta)", "Penghematan (Rp Juta)"];
+    parts.push(`<table style="width:100%;border-collapse:collapse;margin:8px 0;font-size:11px;"><thead><tr style="background:#e8f5e9;">${h.map(hd => `<th style="border:1px solid #bbb;padding:4px 6px;">${hd}</th>`).join("")}</tr></thead><tbody><tr>${h.map(() => '<td style="border:1px solid #ddd;padding:3px 6px;color:#999;">-</td>').join("")}</tr></tbody></table>`);
+    parts.push(`<p style="color:#999;font-style:italic;font-size:11px;">Data absolut belum diisi. Silakan isi tabel pada step Data.</p>`);
+  }
 
   // 3. Sertifikat / Penghargaan
   parts.push(`<h3>${num}.3 Sertifikat / Penghargaan</h3>`);
@@ -133,7 +147,17 @@ ${logoHTML}
 <p>${company.strukturManajemen || "Perusahaan memiliki struktur organisasi yang jelas dengan pembagian tanggung jawab pengelolaan lingkungan di setiap tingkatan. [Detail dapat ditambahkan dari data yang diupload.]"}</p>
 
 <h3>1.4 Deskripsi Anggaran Pengelolaan Lingkungan</h3>
-<p>${company.anggaranLingkungan || "Perusahaan mengalokasikan anggaran khusus untuk program pengelolaan dan pemantauan lingkungan hidup. [Detail anggaran dapat ditambahkan dari data yang diupload.]"}</p>
+<p>${company.anggaranLingkungan || "Perusahaan mengalokasikan anggaran khusus untuk program pengelolaan dan pemantauan lingkungan hidup."}</p>
+${rm.anggaranTable ? renderHTMLTable(rm.anggaranTable) : `<table style="width:100%;border-collapse:collapse;margin:8px 0;font-size:11px;">
+<thead><tr style="background:#e8f5e9;"><th>No</th><th>Kegiatan</th><th>Tahun ${parseInt(company.tahunPenilaian)-2}</th><th>Tahun ${parseInt(company.tahunPenilaian)-1}</th><th>Tahun ${company.tahunPenilaian}</th><th>Satuan</th></tr></thead>
+<tbody><tr><td>1</td><td>Pengendalian Pencemaran Air</td><td>-</td><td>-</td><td>-</td><td>Rp Juta</td></tr>
+<tr><td>2</td><td>Pengendalian Pencemaran Udara</td><td>-</td><td>-</td><td>-</td><td>Rp Juta</td></tr>
+<tr><td>3</td><td>Pengurangan Limbah B3</td><td>-</td><td>-</td><td>-</td><td>Rp Juta</td></tr>
+<tr><td>4</td><td>Konservasi Energi</td><td>-</td><td>-</td><td>-</td><td>Rp Juta</td></tr>
+<tr><td>5</td><td>3R Limbah Non B3</td><td>-</td><td>-</td><td>-</td><td>Rp Juta</td></tr>
+<tr><td>6</td><td>Keanekaragaman Hayati</td><td>-</td><td>-</td><td>-</td><td>Rp Juta</td></tr>
+<tr><td>7</td><td>Pemberdayaan Masyarakat</td><td>-</td><td>-</td><td>-</td><td>Rp Juta</td></tr>
+</tbody></table>`}
 
 <h3>1.5 Keunggulan Perusahaan</h3>
 <p>${company.keunggulanPerusahaan || "Perusahaan memiliki keunggulan dalam pengelolaan lingkungan yang melebihi ketaatan, mencakup efisiensi sumber daya, penurunan emisi, pengelolaan limbah, konservasi keanekaragaman hayati, dan pemberdayaan masyarakat."}</p>
@@ -171,10 +195,30 @@ ${logoHTML}
   // ─── IV. EFISIENSI AIR ───
   sections.push({
     heading: "IV. EFISIENSI AIR DAN PENURUNAN BEBAN AIR LIMBAH",
-    body: renderEvidenceSection("IV", "Efisiensi Air dan Penurunan Beban Air Limbah", rm.air,
-      `Penggunaan air: <strong>${env.penggunaanAir || "-"}</strong>. Beban air limbah: <strong>${env.airLimbah || "-"}</strong>. Program: ${env.programKonservasiAir || "-"}`,
-      `Hasil konservasi air: ${env.hasilKonservasiAir || "-"}`
-    ),
+    body: (() => {
+      let body = renderEvidenceSection("IV", "Efisiensi Air dan Penurunan Beban Air Limbah", rm.air,
+        `Penggunaan air: <strong>${env.penggunaanAir || "-"}</strong>. Beban air limbah: <strong>${env.airLimbah || "-"}</strong>. Program: ${env.programKonservasiAir || "-"}`,
+        `Hasil konservasi air: ${env.hasilKonservasiAir || "-"}`,
+        ["Parameter", "2019", "2020", "2021", "Satuan"],
+        ["Program", "Hasil (m3)", "Anggaran (Rp Juta)", "Penghematan (Rp Juta)", "Satuan"]
+      );
+      // Add Beban Pencemar sub-section
+      body += `
+<h3>IV.5 Status Beban Air Limbah</h3>
+<table style="width:100%;border-collapse:collapse;margin:8px 0;font-size:11px;">
+<thead><tr style="background:#e8f5e9;"><th>Parameter</th><th>2019</th><th>2020</th><th>2021</th><th>Satuan</th></tr></thead>
+<tbody>
+<tr><td>Air Limbah Dihasilkan</td><td>-</td><td>-</td><td>-</td><td>m³</td></tr>
+<tr><td>Beban Pencemar (COD)</td><td>-</td><td>-</td><td>-</td><td>Ton</td></tr>
+<tr><td>Beban Pencemar (TSS)</td><td>-</td><td>-</td><td>-</td><td>Ton</td></tr>
+<tr><td>Amonia (NH3-N)</td><td>-</td><td>-</td><td>-</td><td>Ton</td></tr>
+</tbody></table>
+<h3>IV.6 Hasil Absolut Penurunan Beban Pencemaran Air</h3>
+<table style="width:100%;border-collapse:collapse;margin:8px 0;font-size:11px;">
+<thead><tr style="background:#e8f5e9;"><th>Program</th><th>Parameter</th><th>Hasil 2021</th><th>Anggaran (Rp Juta)</th><th>Penghematan (Rp Juta)</th></tr></thead>
+<tbody><tr><td colspan="5" style="color:#999;text-align:center;">Data beban pencemar belum diisi. Silakan isi tabel pada step Data.</td></tr></tbody></table>`;
+      return body;
+    })(),
   });
 
   // ─── V. 3R LIMBAH B3 ───
@@ -304,7 +348,7 @@ function emptyEvidence(): SectionEvidence {
 
 function emptyRichMedia(): RichMedia {
   return {
-    logoPerusahaan: null, fotoSite: [], fotoProgram: [],
+    logoPerusahaan: null, fotoSite: [], fotoProgram: [], anggaranTable: null,
     energi: emptyEvidence(), emisi: emptyEvidence(), air: emptyEvidence(),
     limbahB3: emptyEvidence(), limbahNonB3: emptyEvidence(),
     sampah: emptyEvidence(), kehati: emptyEvidence(), pemberdayaan: emptyEvidence(),

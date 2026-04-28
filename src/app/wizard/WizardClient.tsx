@@ -14,6 +14,7 @@ const emptyRichMedia: RichMedia = {
   logoPerusahaan: null,
   fotoSite: [],
   fotoProgram: [],
+  anggaranTable: null,
   energi: emptyEvidence(),
   emisi: emptyEvidence(),
   air: emptyEvidence(),

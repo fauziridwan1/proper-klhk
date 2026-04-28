@@ -163,6 +163,13 @@ export default function WizardForm({ onGenerateDRKPL, onGenerateSROI, richMedia,
                 <p className="text-sm text-gray-500">Isi tabel Status & Absolut, upload sertifikat/penghargaan</p>
               </div>
 
+              {/* Anggaran Table */}
+              <SectionBlock title="💰 Anggaran Pengelolaan Lingkungan" color="gray">
+                <TableEditor label="Tabel Anggaran Lingkungan" table={richMedia.anggaranTable}
+                  onChange={t => updateRichMedia({ anggaranTable: t })}
+                  defaultHeaders={["Kegiatan", `Tahun ${parseInt(company.tahunPenilaian)-2}`, `Tahun ${parseInt(company.tahunPenilaian)-1}`, `Tahun ${company.tahunPenilaian}`, "Satuan"]} unit="Rp Juta" />
+              </SectionBlock>
+
               {/* Section: Energi */}
               <SectionBlock title="⚡ Efisiensi Energi" color="amber">
                 <div className="grid md:grid-cols-2 gap-3">

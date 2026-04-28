@@ -72,6 +72,7 @@ export interface RichMedia {
   logoPerusahaan: UploadedImage | null;
   fotoSite: UploadedImage[];
   fotoProgram: UploadedImage[];
+  anggaranTable: DataTable | null;    // Tabel Anggaran di Pendahuluan
 
   // Section evidence — sesuai struktur KLHK
   energi: SectionEvidence;
