@@ -1,29 +1,8 @@
-"use client";
-
-import { useState } from "react";
-import WizardForm from "@/components/WizardForm";
-import DocumentPreview from "@/components/DocumentPreview";
-import { CompanyData, EnvironmentData, SROIData, GeneratedDocument } from "@/lib/types";
-import { generateDRKPLTemplate, generateSROITemplate } from "@/lib/templates";
-import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { ArrowLeft, AlertTriangle, FileText, BarChart3, Award } from "lucide-react";
+import WizardClient from "./WizardClient";
 
 export default function WizardPage() {
-  const [generatedDoc, setGeneratedDoc] = useState<GeneratedDocument | null>(null);
-  const [docColor, setDocColor] = useState<"green" | "blue">("green");
-
-  const handleGenerateDRKPL = (company: CompanyData, env: EnvironmentData) => {
-    const doc = generateDRKPLTemplate(company, env);
-    setGeneratedDoc(doc);
-    setDocColor("green");
-  };
-
-  const handleGenerateSROI = (data: SROIData) => {
-    const doc = generateSROITemplate(data);
-    setGeneratedDoc(doc);
-    setDocColor("blue");
-  };
-
   return (
     <main className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 py-12 px-4">
       <div className="max-w-6xl mx-auto">
@@ -37,18 +16,38 @@ export default function WizardPage() {
           <p className="text-gray-600">Isi data perusahaan Anda, AI akan menyusun dokumen DRKPL atau SROI</p>
         </div>
 
-        <WizardForm
-          onGenerateDRKPL={handleGenerateDRKPL}
-          onGenerateSROI={handleGenerateSROI}
-        />
+        {/* Rules & Scoring Info */}
+        <div className="grid md:grid-cols-3 gap-4 mb-8">
+          <div className="bg-white rounded-xl p-4 shadow-sm border border-amber-200">
+            <div className="flex items-center gap-2 mb-2">
+              <AlertTriangle className="w-5 h-5 text-amber-600" />
+              <h3 className="font-bold text-amber-800 text-sm">Batas Halaman DRKPL</h3>
+            </div>
+            <p className="text-xs text-gray-600">
+              Maksimal <strong>30 halaman</strong>. Jika lebih, dikurangi <strong>50 poin</strong> dari total nilai sesuai Permen 07/2025.
+            </p>
+          </div>
+          <div className="bg-white rounded-xl p-4 shadow-sm border border-green-200">
+            <div className="flex items-center gap-2 mb-2">
+              <Award className="w-5 h-5 text-green-600" />
+              <h3 className="font-bold text-green-800 text-sm">Kandidat Hijau</h3>
+            </div>
+            <p className="text-xs text-gray-600">
+              Nilai DRKPL ≥ 70 dan Nilai Sistem Manajemen Lingkungan ≥ 70.
+            </p>
+          </div>
+          <div className="bg-white rounded-xl p-4 shadow-sm border border-yellow-200">
+            <div className="flex items-center gap-2 mb-2">
+              <BarChart3 className="w-5 h-5 text-yellow-600" />
+              <h3 className="font-bold text-yellow-800 text-sm">Kandidat Emas</h3>
+            </div>
+            <p className="text-xs text-gray-600">
+              Passing grade ≥ 80, konsistensi peringkat, dan inovasi sosial.
+            </p>
+          </div>
+        </div>
 
-        {generatedDoc && (
-          <DocumentPreview
-            document={generatedDoc}
-            onClose={() => setGeneratedDoc(null)}
-            color={docColor}
-          />
-        )}
+        <WizardClient />
       </div>
     </main>
   );

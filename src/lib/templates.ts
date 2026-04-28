@@ -1,17 +1,18 @@
-import { CompanyData, EnvironmentData, SROIData } from "./types";
+import { CompanyData, EnvironmentData, SROIData, GeneratedDocument } from "./types";
+import { getPageEstimate, generateScoringSummary, calculateProperScore } from "./scoring";
 
 export function generateDRKPLTemplate(
   company: CompanyData,
   env: EnvironmentData
-) {
+): GeneratedDocument {
   const sections = [
     {
       heading: "I. PENDAHULUAN",
       body: `
 <h2>I. PENDAHULUAN</h2>
 <h3>1.1 Profil Perusahaan</h3>
-<p><strong>${company.namaPerusahaan}</strong> merupakan perusahaan yang bergerak di bidang ${company.bidangUsaha}. 
-Perusahaan beralamat di ${company.alamat} dengan luas lahan ${company.luasLahan}. 
+<p><strong>${company.namaPerusahaan}</strong> merupakan perusahaan yang bergerak di bidang ${company.bidangUsaha}.
+Perusahaan beralamat di ${company.alamat} dengan luas lahan ${company.luasLahan}.
 Kapasitas produksi perusahaan sebesar ${company.kapasitasProduksi} dengan jumlah karyawan ${company.jumlahKaryawan} orang.</p>
 
 <h3>1.2 Penanggung Jawab</h3>
@@ -23,158 +24,146 @@ Kapasitas produksi perusahaan sebesar ${company.kapasitasProduksi} dengan jumlah
 </ul>
 
 <h3>1.3 Lokasi dan Wilayah Kerja</h3>
-<p>Wilayah kerja perusahaan terletak di ${company.lokasi}, dengan kegiatan utama 
-produksi ${company.bidangUsaha} yang telah memenuhi ketentuan peraturan perundang-undangan 
+<p>Wilayah kerja perusahaan terletak di ${company.lokasi}, dengan kegiatan utama
+produksi ${company.bidangUsaha} yang telah memenuhi ketentuan peraturan perundang-undangan
 di bidang pengelolaan lingkungan hidup.</p>
 `,
     },
     {
-      heading: "II. EFISIENSI ENERGI",
+      heading: "II. SISTEM MANAJEMEN LINGKUNGAN",
       body: `
-<h2>II. EFISIENSI ENERGI</h2>
-<h3>2.1 Status Energi</h3>
-<p>Total pemakaian energi perusahaan pada tahun ${company.tahunPenilaian} sebesar ${env.pemakaianEnergi}. 
+<h2>II. SISTEM MANAJEMEN LINGKUNGAN (SML)</h2>
+<h3>2.1 Kebijakan Lingkungan</h3>
+<p>${company.namaPerusahaan} telah menetapkan kebijakan lingkungan yang menjadi komitmen
+manajemen dalam melaksanakan pengelolaan lingkungan hidup secara berkelanjutan.
+Kebijakan tersebut mencakup komitmen untuk memenuhi peraturan perundang-undangan,
+mencegah pencemaran, dan secara terus-menerus meningkatkan kinerja lingkungan.</p>
+
+<h3>2.2 Struktur Organisasi dan Tanggung Jawab</h3>
+<p>Perusahaan telah membentuk struktur organisasi yang jelas dalam pengelolaan lingkungan,
+meliputi penunjukan penanggung jawab, pembentukan tim lingkungan, dan pembagian
+tugas serta wewenang dalam pelaksanaan program lingkungan.</p>
+
+<h3>2.3 Program Peningkatan Berkelanjutan</h3>
+<p>Program peningkatan kinerja lingkungan secara berkelanjutan meliputi:</p>
+<ul>
+  <li>Penetapan target dan program kerja lingkungan tahunan</li>
+  <li>Monitoring dan evaluasi berkala terhadap target yang ditetapkan</li>
+  <li>Tindak lanjut temuan dan rekomendasi perbaikan</li>
+  <li>Review manajemen secara periodik</li>
+</ul>
+
+<h3>2.4 Sertifikasi Sistem Manajemen Lingkungan</h3>
+<p>Perusahaan telah menerapkan sistem manajemen lingkungan sesuai dengan standar
+yang berlaku sebagai bentuk komitmen dalam pengelolaan lingkungan yang baik.</p>
+`,
+    },
+    {
+      heading: "III. PEMANFAATAN SUMBER DAYA",
+      body: `
+<h2>III. PEMANFAATAN SUMBER DAYA</h2>
+<h3>3.1 Efisiensi Energi</h3>
+<p>Total pemakaian energi perusahaan pada tahun ${company.tahunPenilaian} sebesar ${env.pemakaianEnergi}.
 Sumber energi utama yang digunakan adalah ${env.sumberEnergi}.</p>
+<p>Program efisiensi energi: ${env.programEfisiensiEnergi || "-"}</p>
+<p>Hasil efisiensi: ${env.hasilEfisiensiEnergi || "-"}</p>
 
-<h3>2.2 Program Efisiensi Energi</h3>
-<p>Perusahaan telah melaksanakan program efisiensi energi sebagai berikut:</p>
-<p>${env.programEfisiensiEnergi || "-"}</p>
+<h3>3.2 Penurunan Emisi</h3>
+<p>Beban emisi Gas Rumah Kaca (GRK): ${env.emisiGRK}. Emisi konvensional: ${env.emisiKonvensional}.</p>
+<p>Program pengurangan emisi: ${env.programPenguranganEmisi || "-"}</p>
+<p>Hasil pengurangan: ${env.hasilPenguranganEmisi || "-"}</p>
 
-<h3>2.3 Hasil Absolut Efisiensi Energi</h3>
-<p>Hasil yang dicapai dari program efisiensi energi:</p>
-<p>${env.hasilEfisiensiEnergi || "-"}</p>
+<h3>3.3 Efisiensi Air</h3>
+<p>Penggunaan air: ${env.penggunaanAir}. Air limbah: ${env.airLimbah}.</p>
+<p>Program konservasi air: ${env.programKonservasiAir || "-"}</p>
+<p>Hasil konservasi: ${env.hasilKonservasiAir || "-"}</p>
 
-<h3>2.4 Inovasi</h3>
-<p>Perusahaan terus melakukan inovasi dalam bidang efisiensi energi untuk 
-mengurangi konsumsi energi fosil dan beralih ke sumber energi yang lebih ramah lingkungan.</p>
+<h3>3.4 Pengelolaan Limbah</h3>
+<p>Limbah B3: ${env.limbahB3}. Program 3R: ${env.program3RB3 || "-"}</p>
+<p>Limbah Non B3: ${env.limbahNonB3}. Program 3R: ${env.program3RNonB3 || "-"}</p>
 `,
     },
     {
-      heading: "III. PENURUNAN EMISI",
+      heading: "IV. PROGRAM PEMBERDAYAAN MASYARAKAT",
       body: `
-<h2>III. PENURUNAN EMISI</h2>
-<h3>3.1 Status Emisi</h3>
-<p>Beban emisi Gas Rumah Kaca (GRK) yang dihasilkan tahun ${company.tahunPenilaian} 
-sebesar ${env.emisiGRK}. Emisi konvensional (NOx, SOx, Partikulat, VOC) 
-yang dihasilkan sebesar ${env.emisiKonvensional}.</p>
+<h2>IV. PROGRAM PEMBERDAYAAN MASYARAKAT</h2>
+<h3>4.1 Program Community Development</h3>
+<p>${company.namaPerusahaan} melaksanakan program pemberdayaan masyarakat
+sekitar wilayah operasional sebagai bagian dari tanggung jawab sosial perusahaan.</p>
 
-<h3>3.2 Program Pengurangan Emisi</h3>
-<p>Program yang dilaksanakan untuk mengurangi emisi:</p>
-<p>${env.programPenguranganEmisi || "-"}</p>
+<h3>4.2 Inovasi Sosial</h3>
+<p>Perusahaan mengembangkan inovasi sosial yang memberikan dampak positif
+bagi masyarakat sekitar dan mendukung pencapaian Sustainable Development Goals (SDGs).</p>
 
-<h3>3.3 Hasil Absolut Pengurangan Emisi</h3>
-<p>Hasil pengurangan emisi yang telah dicapai:</p>
-<p>${env.hasilPenguranganEmisi || "-"}</p>
-
-<h3>3.4 Intensitas Emisi</h3>
-<p>Perusahaan terus berupaya menurunkan intensitas emisi per satuan produksi 
-untuk mencapai target Net Zero Emission sesuai komitmen nasional.</p>
+<h3>4.3 Social Return on Investment (SROI)</h3>
+<p>Program pemberdayaan masyarakat diukur menggunakan metode SROI untuk
+mengetahui nilai tambah sosial dan lingkungan yang dihasilkan dari investasi
+yang dilakukan perusahaan.</p>
 `,
     },
     {
-      heading: "IV. PENGELOLAAN LIMBAH B3",
+      heading: "V. KESIMPULAN DAN KOMITMEN",
       body: `
-<h2>IV. PENGELOLAAN LIMBAH BAHAN BERBAHAYA DAN BERACUN (B3)</h2>
-<h3>4.1 Status Limbah B3</h3>
-<p>Total limbah B3 yang dihasilkan tahun ${company.tahunPenilaian} sebesar ${env.limbahB3}. 
-Limbah B3 tersebut meliputi limbah dari proses produksi, fasilitas penunjang, dan kegiatan lainnya.</p>
-
-<h3>4.2 Program 3R Limbah B3</h3>
-<p>Program pengurangan, pemanfaatan, dan daur ulang (3R) limbah B3:</p>
-<p>${env.program3RB3 || "-"}</p>
-
-<h3>4.3 Hasil Absolut 3R Limbah B3</h3>
-<p>Hasil yang dicapai dari program pengelolaan limbah B3:</p>
-<p>${env.hasil3RB3 || "-"}</p>
-
-<h3>4.4 Inovasi</h3>
-<p>Perusahaan mengembangkan inovasi dalam pengelolaan limbah B3 untuk 
-mengurangi volume limbah yang dibuang ke lingkungan.</p>
-`,
-    },
-    {
-      heading: "V. PENGELOLAAN LIMBAH NON B3",
-      body: `
-<h2>V. PENGELOLAAN LIMBAH NON B3</h2>
-<h3>5.1 Status Limbah Non B3</h3>
-<p>Total limbah non B3 yang dihasilkan tahun ${company.tahunPenilaian} sebesar ${env.limbahNonB3}.</p>
-
-<h3>5.2 Program 3R Limbah Non B3</h3>
-<p>Program pengurangan, pemanfaatan, dan daur ulang (3R) limbah non B3:</p>
-<p>${env.program3RNonB3 || "-"}</p>
-
-<h3>5.3 Hasil Absolut 3R Limbah Non B3</h3>
-<p>Hasil yang dicapai dari program pengelolaan limbah non B3:</p>
-<p>${env.hasil3RNonB3 || "-"}</p>
-
-<h3>5.4 Sertifikat / Penghargaan</h3>
-<p>Program pengelolaan limbah non B3 telah mendapatkan pengakuan dan 
-penghargaan dari berbagai lembaga.</p>
-`,
-    },
-    {
-      heading: "VI. EFISIENSI AIR",
-      body: `
-<h2>VI. EFISIENSI AIR</h2>
-<h3>6.1 Status Konsumsi Air</h3>
-<p>Total penggunaan air tahun ${company.tahunPenilaian} sebesar ${env.penggunaanAir}. 
-Penggunaan air meliputi proses produksi, fasilitas penunjang, dan kegiatan lain-lain.</p>
-
-<h3>6.2 Status Air Limbah</h3>
-<p>Total air limbah yang dihasilkan sebesar ${env.airLimbah}. 
-Air limbah diolah sesuai dengan baku mutu yang ditetapkan sebelum dibuang ke badan air penerima.</p>
-
-<h3>6.3 Program Konservasi Air</h3>
-<p>Program konservasi dan efisiensi air yang dilaksanakan:</p>
-<p>${env.programKonservasiAir || "-"}</p>
-
-<h3>6.4 Hasil Absolut Konservasi Air</h3>
-<p>Hasil yang dicapai dari program konservasi air:</p>
-<p>${env.hasilKonservasiAir || "-"}</p>
-
-<h3>6.5 Penurunan Beban Pencemar</h3>
-<p>Perusahaan terus melakukan upaya penurunan beban pencemar air (COD, BOD, TSS, 
-Minyak & Lemak, Amonia) melalui pengolahan air limbah yang optimal.</p>
-`,
-    },
-    {
-      heading: "VII. KESIMPULAN DAN KOMITMEN",
-      body: `
-<h2>VII. KESIMPULAN DAN KOMITMEN</h2>
-<p>${company.namaPerusahaan} berkomitmen untuk terus meningkatkan kinerja 
-pengelolaan lingkungan hidup melalui program-program inovatif yang melebihi 
+<h2>V. KESIMPULAN DAN KOMITMEN</h2>
+<p>${company.namaPerusahaan} berkomitmen untuk terus meningkatkan kinerja
+pengelolaan lingkungan hidup melalui program-program inovatif yang melebihi
 ketaatan peraturan perundang-undangan.</p>
 
 <p>Beberapa capaian utama:</p>
 <ul>
-  <li>Efisiensi energi yang signifikan</li>
+  <li>Sistem Manajemen Lingkungan yang terstruktur</li>
+  <li>Efisiensi energi dan air yang signifikan</li>
   <li>Penurunan emisi GRK dan emisi konvensional</li>
   <li>Pengelolaan limbah B3 dan non B3 sesuai standar</li>
-  <li>Konservasi air dan penurunan beban pencemar</li>
+  <li>Program pemberdayaan masyarakat berkelanjutan</li>
 </ul>
 
-<p>Perusahaan akan terus berupaya mencapai peringkat PROPER yang lebih tinggi 
+<p>Perusahaan akan terus berupaya mencapai peringkat PROPER yang lebih tinggi
 dan berkontribusi pada Sustainable Development Goals (SDGs).</p>
 `,
     },
   ];
 
+  // Build full content
+  const fullContent = sections.map((s) => `${s.heading}\n${s.body}`).join("\n\n");
+  const pageEstimate = getPageEstimate(fullContent.length);
+
+  // Calculate scoring (default demo scores - in real app would be input by user)
+  const drkplRawScore = 85;
+  const smlScore = 80;
+  const score = calculateProperScore(drkplRawScore, smlScore, pageEstimate);
+
+  // Add scoring section
+  sections.push({
+    heading: "VI. RINGKASAN PENILAIAN PROPER",
+    body: generateScoringSummary(score),
+  });
+
   return {
-    title: `DOKUMEN RINGKASAN KINERJA PENGELOLAAN LINGKUNGAN (DRKPL) ${company.tahunPenilaian}`,
-    content: sections.map((s) => `${s.heading}\n${s.body}`).join("\n\n"),
+    title: `DRKPL ${company.tahunPenilaian} - ${company.namaPerusahaan}`,
+    content: fullContent + "\n\n" + generateScoringSummary(score),
     sections,
+    pageEstimate,
+    scoringData: {
+      drkplScore: score.drkplScore,
+      smlScore: score.smlScore,
+      totalScore: score.totalScore,
+      pageCount: score.pageCount,
+      pagePenalty: score.pagePenalty,
+      category: score.category || "BELOW",
+    },
   };
 }
 
-export function generateSROITemplate(data: SROIData) {
+export function generateSROITemplate(data: SROIData): GeneratedDocument {
   const sections = [
     {
       heading: "I. PENDAHULUAN",
       body: `
 <h2>I. PENDAHULUAN</h2>
 <h3>1.1 Latar Belakang</h3>
-<p>Social Return on Investment (SROI) adalah kerangka kerja untuk mengukur dan 
-membahas nilai sosial, ekonomi, dan lingkungan yang diciptakan oleh suatu kegiatan 
+<p>Social Return on Investment (SROI) adalah kerangka kerja untuk mengukur dan
+membahas nilai sosial, ekonomi, dan lingkungan yang diciptakan oleh suatu kegiatan
 atau organisasi. Dokumen ini menyajikan analisis SROI untuk program <strong>${data.namaProgram}</strong>.</p>
 
 <h3>1.2 Deskripsi Program</h3>
@@ -249,28 +238,32 @@ atau organisasi. Dokumen ini menyajikan analisis SROI untuk program <strong>${da
       body: `
 <h2>V. PERHITUNGAN SROI</h2>
 <h3>5.1 Perhitungan Dampak Finansial</h3>
-<p>Berdasarkan analisis dampak yang telah dilakukan, nilai ekonomi dari 
-outcome sosial dan lingkungan dihitung menggunakan financial proxy 
+<p>Berdasarkan analisis dampak yang telah dilakukan, nilai ekonomi dari
+outcome sosial dan lingkungan dihitung menggunakan financial proxy
 berdasarkan data sekunder dan konsultasi dengan stakeholder.</p>
 
 <h3>5.2 Hasil SROI</h3>
 <p><strong>${data.hasilSROI || "[Hasil perhitungan SROI]"}</strong></p>
 
-<p>Hasil SROI menunjukkan bahwa setiap rupiah yang diinvestasikan dalam 
-program ${data.namaProgram} menghasilkan nilai sosial dan lingkungan 
+<p>Hasil SROI menunjukkan bahwa setiap rupiah yang diinvestasikan dalam
+program ${data.namaProgram} menghasilkan nilai sosial dan lingkungan
 yang signifikan.</p>
 
 <h3>5.3 Kesimpulan</h3>
-<p>Program ${data.namaProgram} terbukti memberikan dampak positif 
-yang besar terhadap masyarakat dan lingkungan. Rekomendasi untuk 
+<p>Program ${data.namaProgram} terbukti memberikan dampak positif
+yang besar terhadap masyarakat dan lingkungan. Rekomendasi untuk
 melanjutkan dan mengembangkan program ini di masa mendatang.</p>
 `,
     },
   ];
 
+  const fullContent = sections.map((s) => `${s.heading}\n${s.body}`).join("\n\n");
+  const pageEstimate = Math.ceil(fullContent.length / 1500);
+
   return {
-    title: `SOCIAL RETURN ON INVESTMENT (SROI) ANALYSIS - ${data.namaProgram}`,
-    content: sections.map((s) => `${s.heading}\n${s.body}`).join("\n\n"),
+    title: `SROI - ${data.namaProgram}`,
+    content: fullContent,
     sections,
+    pageEstimate,
   };
 }

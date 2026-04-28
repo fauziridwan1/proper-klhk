@@ -52,4 +52,13 @@ export interface GeneratedDocument {
   title: string;
   content: string;
   sections: { heading: string; body: string }[];
+  pageEstimate?: number;
+  scoringData?: {
+    drkplScore: number;
+    smlScore: number;
+    totalScore: number;
+    pageCount: number;
+    pagePenalty: number;
+    category: string;
+  };
 }

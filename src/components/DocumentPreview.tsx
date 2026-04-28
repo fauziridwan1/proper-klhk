@@ -171,11 +171,55 @@ export default function DocumentPreview({ document: generatedDoc, onClose, color
 
   const accentColor = color === "green" ? "text-green-700 border-green-600 bg-green-50" : "text-blue-700 border-blue-600 bg-blue-50";
 
+  const pageEstimate = generatedDoc.pageEstimate || 0;
+  const scoringData = generatedDoc.scoringData;
+  const isOverLimit = pageEstimate > 30;
+
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center overflow-y-auto py-8">
       <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full mx-4">
+        {/* Page Limit Warning Banner */}
+        {isOverLimit && (
+          <div className="bg-red-600 text-white px-6 py-3 rounded-t-2xl flex items-center justify-between">
+            <div className="flex items-center">
+              <span className="text-2xl mr-2">⚠️</span>
+              <div>
+                <p className="font-bold">DRKPL MELEBIHI BATAS 30 HALAMAN!</p>
+                <p className="text-sm">Dokumen ini ~{pageEstimate} halaman. Akan dikurangi 50 poin sesuai Permen 07/2025.</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Scoring Badge */}
+        {scoringData && (
+          <div className={`px-6 py-2 ${isOverLimit ? '' : 'rounded-t-2xl'} ${
+            scoringData.category === 'EMAS' ? 'bg-amber-100 border-b border-amber-300' :
+            scoringData.category === 'HIJAU' ? 'bg-green-100 border-b border-green-300' :
+            'bg-gray-100 border-b border-gray-300'
+          }`}>
+            <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center gap-4">
+                <span className={`font-bold ${
+                  scoringData.category === 'EMAS' ? 'text-amber-800' :
+                  scoringData.category === 'HIJAU' ? 'text-green-800' :
+                  'text-gray-700'
+                }`}>
+                  {scoringData.category === 'EMAS' && '🏆 KANDIDAT EMAS'}
+                  {scoringData.category === 'HIJAU' && '🌿 KANDIDAT HIJAU'}
+                  {scoringData.category === 'BELOW' && '⚪ BELOW COMPLIANCE'}
+                </span>
+                <span className="text-gray-600">
+                  DRKPL: {scoringData.drkplScore} | SML: {scoringData.smlScore} | Total: {scoringData.totalScore}
+                </span>
+              </div>
+              <span className="text-gray-500">~{pageEstimate} halaman</span>
+            </div>
+          </div>
+        )}
+
         {/* Header */}
-        <div className={`flex items-center justify-between p-6 border-b ${accentColor}`}>
+        <div className={`flex items-center justify-between p-6 border-b ${accentColor} ${!isOverLimit && !scoringData ? 'rounded-t-2xl' : ''}`}>
           <div>
             <h2 className="text-xl font-bold">{generatedDoc.title}</h2>
             <p className="text-sm opacity-75">Dokumen telah digenerate oleh AI</p>
