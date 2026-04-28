@@ -125,6 +125,31 @@ export function extractDataFromText(text: string): ExtractedData {
     "Luas Wilayah", "Area Konsesi",
   ]);
 
+  // New company fields
+  company.deskripsiProsesProduksi = extractParagraph(
+    "proses produksi", "struktur"
+  ) || extractAfter(["Deskripsi Proses Produksi", "Proses Produksi", "Production Process", "Uraian Proses"], 500);
+
+  company.strukturManajemen = extractParagraph(
+    "struktur manajemen", "anggaran"
+  ) || extractParagraph("struktur organisasi", "sertifikasi") || extractAfter(["Struktur Manajemen", "Struktur Organisasi"], 400);
+
+  company.anggaranLingkungan = extractParagraph(
+    "anggaran pengelolaan lingkungan", "keunggulan"
+  ) || extractAfter(["Anggaran Lingkungan", "Anggaran Pengelolaan", "Biaya Lingkungan", "Environmental Budget", "Alokasi Anggaran"], 300);
+
+  company.keunggulanPerusahaan = extractParagraph(
+    "keunggulan perusahaan", "sertifikasi produk"
+  ) || extractAfter(["Keunggulan Perusahaan", "Keunggulan", "Competitive Advantage", "Unggulan"], 400);
+
+  company.sertifikasiProduk = extractParagraph(
+    "sertifikasi produk ramah lingkungan", "green building"
+  ) || extractAfter(["Sertifikasi Produk", "Sertifikasi Ramah Lingkungan", "Ecolabel", "Produk Hijau", "Green Product"], 300);
+
+  company.sertifikasiGreenBuilding = extractParagraph(
+    "sertifikasi green building", "penilaian daur hidup"
+  ) || extractAfter(["Sertifikasi Green Building", "Green Building", "Bangunan Hijau", "LEED", "GREENSHIP", "EDGE"], 300);
+
   // ─── Environment Data ───
 
   environment.pemakaianEnergi = extractNumeric([
