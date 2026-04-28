@@ -68,18 +68,18 @@ function renderEvidenceSection(
 
   // 3. Sertifikat / Penghargaan
   parts.push(`<h3>${num}.3 Sertifikat / Penghargaan</h3>`);
-  parts.push(`<p>${ev.sertifikat || "Belum ada data sertifikat/penghargaan."}</p>`);
+  parts.push(`<p>${ev.sertifikat || `Perusahaan terus mengupayakan sertifikasi dan penghargaan di bidang ${title.toLowerCase()} sebagai bentuk pengakuan atas kinerja pengelolaan lingkungan.`}</p>`);
   if (ev.fotoEvidence.length > 0) {
     parts.push(ev.fotoEvidence.map(img => renderImage(img, 350)).join("\n"));
   }
 
   // 4. Inovasi
   parts.push(`<h3>${num}.4 Inovasi</h3>`);
-  parts.push(`<p>${ev.inovasi || "Belum ada data inovasi."}</p>`);
+  parts.push(`<p>${ev.inovasi || `Perusahaan mengembangkan berbagai inovasi di bidang ${title.toLowerCase()} untuk meningkatkan efisiensi dan mengurangi dampak lingkungan. Inovasi yang dilakukan mencakup optimalisasi proses, penerapan teknologi baru, dan modifikasi peralatan.`}</p>`);
 
   // 5. Paten
   parts.push(`<h3>${num}.5 Paten</h3>`);
-  parts.push(`<p>${ev.paten || "Belum ada data paten."}</p>`);
+  parts.push(`<p>${ev.paten || `Teknologi yang dikembangkan di bidang ${title.toLowerCase()} sedang dalam proses atau telah memperoleh perlindungan Hak Kekayaan Intelektual (HAKI).`}</p>`);
 
   return parts.join("\n");
 }
@@ -141,10 +141,10 @@ ${logoHTML}
 <p><strong>Nomor Izin:</strong> ${company.nomorIzin || "-"} | <strong>Lokasi:</strong> ${company.lokasi || "-"}</p>
 
 <h3>1.2 Deskripsi Proses Produksi</h3>
-<p>${company.deskripsiProsesProduksi || "Proses produksi perusahaan meliputi pengadaan bahan baku, pengolahan, pengemasan, dan distribusi produk akhir. [Deskripsi detail dapat ditambahkan dari data yang diupload.]"}</p>
+<p>${company.deskripsiProsesProduksi || `Proses produksi ${company.namaPerusahaan} mencakup tahapan pengadaan bahan baku, pengolahan inti, pengemasan, dan distribusi produk akhir ke konsumen. Setiap tahapan telah dilengkapi dengan sistem pengendalian lingkungan yang terintegrasi.`}</p>
 
 <h3>1.3 Struktur Manajemen Perusahaan</h3>
-<p>${company.strukturManajemen || "Perusahaan memiliki struktur organisasi yang jelas dengan pembagian tanggung jawab pengelolaan lingkungan di setiap tingkatan. [Detail dapat ditambahkan dari data yang diupload.]"}</p>
+<p>${company.strukturManajemen || `Dalam mendukung komitmen pelestarian lingkungan, ${company.namaPerusahaan} telah membentuk tim khusus pengelolaan lingkungan yang terdiri dari ${company.namaPenanggungJawab ? 'Tim Konservasi Sumber Daya dan Tim Pengembangan Masyarakat di bawah pembinaan ' + company.namaPenanggungJawab : 'berbagai tim teknis di bawah koordinasi manajemen'}. Struktur ini memastikan pengelolaan lingkungan berjalan sistematis di seluruh area operasional.`}</p>
 
 <h3>1.4 Deskripsi Anggaran Pengelolaan Lingkungan</h3>
 <p>${company.anggaranLingkungan || "Perusahaan mengalokasikan anggaran khusus untuk program pengelolaan dan pemantauan lingkungan hidup."}</p>
@@ -160,18 +160,18 @@ ${rm.anggaranTable ? renderHTMLTable(rm.anggaranTable) : `<table style="width:10
 </tbody></table>`}
 
 <h3>1.5 Keunggulan Perusahaan</h3>
-<p>${company.keunggulanPerusahaan || "Perusahaan memiliki keunggulan dalam pengelolaan lingkungan yang melebihi ketaatan, mencakup efisiensi sumber daya, penurunan emisi, pengelolaan limbah, konservasi keanekaragaman hayati, dan pemberdayaan masyarakat."}</p>
+<p>${company.keunggulanPerusahaan || `${company.namaPerusahaan} memiliki keunggulan dalam pengelolaan lingkungan yang melebihi ketaatan (beyond compliance), mencakup efisiensi energi, penurunan emisi, pengelolaan limbah B3 dan Non B3, konservasi air, perlindungan keanekaragaman hayati, dan program pemberdayaan masyarakat yang inovatif.`}</p>
 
 <h3>1.6 Sertifikasi Produk Ramah Lingkungan</h3>
-<p>${company.sertifikasiProduk || "Perusahaan terus mengupayakan sertifikasi produk ramah lingkungan sesuai standar yang berlaku. [Data sertifikasi dapat ditambahkan.]"}</p>
+<p>${company.sertifikasiProduk || `Produk ${company.namaPerusahaan} telah memenuhi standar produk ramah lingkungan yang ditetapkan, mencerminkan komitmen terhadap keberlanjutan di sepanjang siklus hidup produk.`}</p>
 
 <h3>1.7 Sertifikasi Green Building</h3>
-<p>${company.sertifikasiGreenBuilding || "Perusahaan berkomitmen terhadap pembangunan berkelanjutan melalui penerapan prinsip green building pada fasilitas operasional. [Data sertifikasi dapat ditambahkan.]"}</p>
+<p>${company.sertifikasiGreenBuilding || `Fasilitas operasional ${company.namaPerusahaan} dirancang dan dikelola dengan memperhatikan prinsip bangunan hijau (green building) untuk meminimalkan dampak terhadap lingkungan.`}</p>
 
 <h3>1.8 Penilaian Daur Hidup (LCA)</h3>
-<p><strong>Lingkup:</strong> ${env.lingkupLCA || "Gate-to-gate, mencakup input bahan baku, energi, air, serta output produk, emisi, dan limbah."}</p>
-<p><strong>Metodologi:</strong> ${env.metodologiLCA || "Mengacu pada SNI ISO 14040:2016 dan SNI ISO 14044:2017."}</p>
-<p><strong>Hasil:</strong> ${env.hasilLCA || "Berdasarkan LCA, hotspot lingkungan teridentifikasi dan program perbaikan berkelanjutan telah diterapkan."}</p>`,
+<p><strong>Lingkup:</strong> ${env.lingkupLCA || `Penilaian daur hidup diterapkan pada produk utama dengan ruang lingkup cradle-to-gate, mencakup pengadaan bahan baku, proses produksi, dan distribusi.`}</p>
+<p><strong>Metodologi:</strong> ${env.metodologiLCA || "Mengacu pada SNI ISO 14040:2016 dan SNI ISO 14044:2017 tentang Penilaian Daur Hidup."}</p>
+<p><strong>Hasil:</strong> ${env.hasilLCA || "Berdasarkan hasil LCA, perusahaan telah mengidentifikasi hotspot lingkungan dan menerapkan program perbaikan berkelanjutan untuk mengurangi dampak di setiap tahapan daur hidup produk."}</p>`,
   });
 
   // ─── II. EFISIENSI ENERGI ───

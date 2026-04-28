@@ -16,7 +16,7 @@ export default function DocumentUploader({ onDataExtracted }: DocumentUploaderPr
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState<string>("");
 
-  const extractTextFromFile = async (file: File): Promise<string> => {
+  const extractTextFromFile = async (file: File): Promise<{ text: string; error?: string }> => {
     const formData = new FormData();
     formData.append("file", file);
 
@@ -25,12 +25,8 @@ export default function DocumentUploader({ onDataExtracted }: DocumentUploaderPr
       body: formData,
     });
 
-    if (!response.ok) {
-      throw new Error("Failed to extract text");
-    }
-
     const data = await response.json();
-    return data.text || "";
+    return { text: data.text || "", error: data.error };
   };
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
@@ -42,10 +38,16 @@ export default function DocumentUploader({ onDataExtracted }: DocumentUploaderPr
     setProgress("Membaca file...");
 
     try {
-      const text = await extractTextFromFile(file);
+      const { text, error: apiError } = await extractTextFromFile(file);
+
+      if (apiError) {
+        setError(apiError);
+        setIsExtracting(false);
+        return;
+      }
 
       if (!text || text.length < 50) {
-        setError("Tidak dapat membaca teks dari dokumen. Pastikan file tidak terpassword atau corrupt.");
+        setError("Teks yang terekstrak terlalu sedikit. File mungkin hasil scan (gambar), terpassword, atau corrupt. Coba upload file .docx.");
         setIsExtracting(false);
         return;
       }
@@ -57,7 +59,7 @@ export default function DocumentUploader({ onDataExtracted }: DocumentUploaderPr
       setExtractedFile(file.name);
       onDataExtracted(extracted.company, extracted.environment, file.name);
     } catch (err) {
-      setError("Terjadi kesalahan saat membaca file. Coba file lain.");
+      setError("Gagal memproses file. Pastikan file tidak corrupt dan koneksi internet stabil.");
     } finally {
       setIsExtracting(false);
     }
