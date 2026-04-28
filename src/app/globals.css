@@ -1,0 +1,37 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+@layer base {
+  .prose-document h1 { @apply text-2xl font-bold mb-4 text-green-800; }
+  .prose-document h2 { @apply text-xl font-bold mt-6 mb-3 text-green-700; }
+  .prose-document h3 { @apply text-lg font-semibold mt-4 mb-2 text-green-600; }
+  .prose-document p { @apply mb-3 leading-relaxed; }
+  .prose-document ul { @apply list-disc pl-5 mb-3; }
+  .prose-document table { @apply w-full border-collapse mb-4; }
+  .prose-document th { @apply border border-gray-300 px-3 py-2 bg-green-50 font-semibold text-left; }
+  .prose-document td { @apply border border-gray-300 px-3 py-2; }
+}
