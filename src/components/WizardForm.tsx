@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { CompanyData, EnvironmentData, SROIData } from "@/lib/types";
-import { ChevronRight, ChevronLeft, Building2, Leaf, Users, FileText, CheckCircle } from "lucide-react";
+import { ChevronRight, ChevronLeft, Building2, Leaf, Users, FileText, CheckCircle, Upload } from "lucide-react";
+import DocumentUploader from "./DocumentUploader";
 
 interface WizardFormProps {
   onGenerateDRKPL: (company: CompanyData, env: EnvironmentData) => void;
@@ -12,6 +13,7 @@ interface WizardFormProps {
 export default function WizardForm({ onGenerateDRKPL, onGenerateSROI }: WizardFormProps) {
   const [step, setStep] = useState(0);
   const [docType, setDocType] = useState<"drkpl" | "sroi" | null>(null);
+  const [showUploader, setShowUploader] = useState(false);
 
   const [company, setCompany] = useState<CompanyData>({
     namaPerusahaan: "",
@@ -64,7 +66,7 @@ export default function WizardForm({ onGenerateDRKPL, onGenerateSROI }: WizardFo
   });
 
   const stepsDRKPL = [
-    { title: "Profil Perusahaan", icon: Building2 },
+    { title: "Upload / Profil", icon: Upload },
     { title: "Data Lingkungan", icon: Leaf },
     { title: "Review & Generate", icon: FileText },
   ];
@@ -86,6 +88,12 @@ export default function WizardForm({ onGenerateDRKPL, onGenerateSROI }: WizardFo
     } else if (docType === "sroi") {
       onGenerateSROI(sroi);
     }
+  };
+
+  const handleDataExtracted = (extractedCompany: Partial<CompanyData>, extractedEnv: Partial<EnvironmentData>) => {
+    setCompany((prev) => ({ ...prev, ...extractedCompany }));
+    setEnv((prev) => ({ ...prev, ...extractedEnv }));
+    setShowUploader(false);
   };
 
   if (!docType) {
@@ -142,21 +150,30 @@ export default function WizardForm({ onGenerateDRKPL, onGenerateSROI }: WizardFo
         {docType === "drkpl" && (
           <>
             {step === 0 && (
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <h3 className="text-xl font-bold text-green-800 mb-4">Profil Perusahaan</h3>
-                <div className="grid md:grid-cols-2 gap-4">
-                  <Input label="Nama Perusahaan" value={company.namaPerusahaan} onChange={(v) => setCompany({ ...company, namaPerusahaan: v })} />
-                  <Input label="Bidang Usaha" value={company.bidangUsaha} onChange={(v) => setCompany({ ...company, bidangUsaha: v })} />
-                  <Input label="Nama Penanggung Jawab" value={company.namaPenanggungJawab} onChange={(v) => setCompany({ ...company, namaPenanggungJawab: v })} />
-                  <Input label="Jabatan" value={company.jabatan} onChange={(v) => setCompany({ ...company, jabatan: v })} />
-                  <Input label="Tahun Penilaian" value={company.tahunPenilaian} onChange={(v) => setCompany({ ...company, tahunPenilaian: v })} />
-                  <Input label="Nomor Izin Lingkungan" value={company.nomorIzin} onChange={(v) => setCompany({ ...company, nomorIzin: v })} />
-                  <Input label="Kapasitas Produksi" value={company.kapasitasProduksi} onChange={(v) => setCompany({ ...company, kapasitasProduksi: v })} />
-                  <Input label="Jumlah Karyawan" value={company.jumlahKaryawan} onChange={(v) => setCompany({ ...company, jumlahKaryawan: v })} />
-                  <Input label="Luas Lahan" value={company.luasLahan} onChange={(v) => setCompany({ ...company, luasLahan: v })} />
-                  <Input label="Lokasi" value={company.lokasi} onChange={(v) => setCompany({ ...company, lokasi: v })} />
+                
+                {/* Document Uploader */}
+                <DocumentUploader onDataExtracted={handleDataExtracted} />
+                
+                <div className="border-t pt-6">
+                  <p className="text-sm text-gray-500 mb-4">
+                    Atau isi manual jika tidak ada dokumen:
+                  </p>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <Input label="Nama Perusahaan" value={company.namaPerusahaan} onChange={(v) => setCompany({ ...company, namaPerusahaan: v })} />
+                    <Input label="Bidang Usaha" value={company.bidangUsaha} onChange={(v) => setCompany({ ...company, bidangUsaha: v })} />
+                    <Input label="Nama Penanggung Jawab" value={company.namaPenanggungJawab} onChange={(v) => setCompany({ ...company, namaPenanggungJawab: v })} />
+                    <Input label="Jabatan" value={company.jabatan} onChange={(v) => setCompany({ ...company, jabatan: v })} />
+                    <Input label="Tahun Penilaian" value={company.tahunPenilaian} onChange={(v) => setCompany({ ...company, tahunPenilaian: v })} />
+                    <Input label="Nomor Izin Lingkungan" value={company.nomorIzin} onChange={(v) => setCompany({ ...company, nomorIzin: v })} />
+                    <Input label="Kapasitas Produksi" value={company.kapasitasProduksi} onChange={(v) => setCompany({ ...company, kapasitasProduksi: v })} />
+                    <Input label="Jumlah Karyawan" value={company.jumlahKaryawan} onChange={(v) => setCompany({ ...company, jumlahKaryawan: v })} />
+                    <Input label="Luas Lahan" value={company.luasLahan} onChange={(v) => setCompany({ ...company, luasLahan: v })} />
+                    <Input label="Lokasi" value={company.lokasi} onChange={(v) => setCompany({ ...company, lokasi: v })} />
+                  </div>
+                  <TextArea label="Alamat Lengkap" value={company.alamat} onChange={(v) => setCompany({ ...company, alamat: v })} />
                 </div>
-                <Input label="Alamat Lengkap" value={company.alamat} onChange={(v) => setCompany({ ...company, alamat: v })} />
               </div>
             )}
 
@@ -216,9 +233,9 @@ export default function WizardForm({ onGenerateDRKPL, onGenerateSROI }: WizardFo
                 <h3 className="text-xl font-bold text-green-800 mb-2">Siap Generate DRKPL</h3>
                 <p className="text-gray-600 mb-6">Data telah lengkap. Klik tombol di bawah untuk generate dokumen DRKPL sesuai Permen LH/BPH No. 07/2025.</p>
                 <div className="bg-gray-50 rounded-xl p-4 text-left text-sm space-y-2">
-                  <p><strong>Perusahaan:</strong> {company.namaPerusahaan}</p>
+                  <p><strong>Perusahaan:</strong> {company.namaPerusahaan || "-"}</p>
                   <p><strong>Tahun:</strong> {company.tahunPenilaian}</p>
-                  <p><strong>Bidang:</strong> {company.bidangUsaha}</p>
+                  <p><strong>Bidang:</strong> {company.bidangUsaha || "-"}</p>
                 </div>
               </div>
             )}
